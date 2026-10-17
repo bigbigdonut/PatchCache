@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>PatchCache</title>
+<title>patchCache</title>
 <style>
 :root{
   --chrome:#12161d; --chrome-2:#1a2029; --chrome-3:#232b37; --line:#2c3644;
@@ -15,46 +15,46 @@
   --sans: ui-monospace, "SF Mono", Menlo, Monaco, Consolas, monospace;
 }
 *{box-sizing:border-box}
-html,body{margin:0;height:100%;background:var(--chrome);color:var(--text);font:13px/1.35 var(--sans)}
+html,body{margin:0;height:100%;background:var(--chrome);color:var(--text);font:14.5px/1.35 var(--sans)}
 button,input,select{font:inherit;color:inherit}
 #app{display:flex;height:100vh}
 
 .btn{background:var(--chrome-3);border:1px solid var(--line);border-radius:6px;padding:5px 10px;cursor:pointer;white-space:nowrap}
 .btn:hover{border-color:#41516a}
-.btn.icon{padding:3px 9px;font-size:16px;line-height:1}
+.btn.icon{padding:3px 9px;font-size:17.5px;line-height:1}
 .btn.primary{background:#1f5f80;border-color:#2b7aa3}
 
 /* Main */
 main{flex:1;display:flex;flex-direction:column;min-width:0;min-height:0}
 #detailHead{display:flex;align-items:center;gap:14px;padding:10px 16px;border-bottom:1px solid var(--line);background:var(--chrome);flex-wrap:wrap}
 .titles{flex:1;min-width:260px}
-#pbTitle{font-size:19px;font-weight:600;background:transparent;border:1px solid transparent;border-radius:6px;padding:2px 8px;margin-left:-9px;
+#pbTitle{font-size:21px;font-weight:600;background:transparent;border:1px solid transparent;border-radius:6px;padding:2px 8px;margin-left:-9px;
   cursor:pointer;display:inline-flex;align-items:center;gap:8px;max-width:100%}
 #pbTitle:hover,#pbTitle[aria-expanded="true"]{border-color:var(--line);background:var(--chrome-2)}
 #pbTitle .nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-#pbTitle .caret{font-size:11px;color:var(--dim)}
-#pbName{display:none;font-size:19px;font-weight:600;background:var(--chrome-2);border:1px solid var(--accent);border-radius:6px;padding:2px 8px;margin-left:-9px;width:min(420px,100%)}
+#pbTitle .caret{font-size:12px;color:var(--dim)}
+#pbName{display:none;font-size:21px;font-weight:600;background:var(--chrome-2);border:1px solid var(--accent);border-radius:6px;padding:2px 8px;margin-left:-9px;width:min(420px,100%)}
 #pbName:focus{outline:none}
 .titles.renaming #pbTitle{display:none}
 .titlerow{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-#verBtn{font:600 15px var(--sans);color:#cfe3f5;background:var(--chrome-2);border:1px solid var(--line);border-radius:6px;padding:3px 10px;cursor:pointer;display:inline-flex;align-items:center;gap:7px}
+#verBtn{font:600 16.5px var(--sans);color:#cfe3f5;background:var(--chrome-2);border:1px solid var(--line);border-radius:6px;padding:3px 10px;cursor:pointer;display:inline-flex;align-items:center;gap:7px}
 #verBtn:hover,#verBtn[aria-expanded="true"]{border-color:#41516a}
-#verBtn .caret{font-size:10px;color:var(--dim)}
-#verBtn .dirty{display:none;color:#ffc759;font-size:11px;font-weight:600}
+#verBtn .caret{font-size:11px;color:var(--dim)}
+#verBtn .dirty{display:none;color:#ffc759;font-size:12px;font-weight:600}
 #verBtn.is-dirty .dirty{display:inline}
 .titles.renaming #verBtn{display:none}
 /* Patch-point table */
 .ptwrap{position:absolute}
 .ptpair{display:flex;justify-content:space-between;align-items:flex-start}
-.ptable{border:1px solid #eef0f2;background:rgba(9,30,56,.55);font:11px var(--mono);color:var(--ink)}
-.ptwrap > .phead{margin-top:-1px;border:1px solid #eef0f2;background:rgba(9,30,56,.55);font:11px var(--mono)}
+.ptable{border:1px solid #eef0f2;background:rgba(9,30,56,.55);font:12px var(--mono);color:var(--ink)}
+.ptwrap > .phead{margin-top:-1px;border:1px solid #eef0f2;background:rgba(9,30,56,.55);font:12px var(--mono)}
 .phead{display:flex;align-items:center;justify-content:space-between;padding:3px 8px;border-top:1px solid rgba(238,240,242,.55)}
-.phead span{font-size:8.5px;letter-spacing:.06em;color:rgba(238,240,242,.6);font-weight:600}
-.phead .btn{font:10px var(--sans);padding:2px 8px;border-radius:5px}
+.phead span{font-size:9.5px;letter-spacing:.06em;color:rgba(238,240,242,.6);font-weight:600}
+.phead .btn{font:11px var(--sans);padding:2px 8px;border-radius:5px}
 .phead #ptCtl{display:flex;gap:5px;margin-left:auto;margin-right:6px;visibility:visible !important}
 .phead select.btn{padding:2px 22px 2px 8px;background-position:right 7px center}
 .ptable table{border-collapse:collapse;width:100%}
-.ptable th{font-size:10.5px;letter-spacing:.06em;color:rgba(238,240,242,.6);text-align:left;font-weight:600;padding:4px 8px;border-bottom:1px solid rgba(238,240,242,.3)}
+.ptable th{font-size:11.5px;letter-spacing:.06em;color:rgba(238,240,242,.6);text-align:left;font-weight:600;padding:4px 8px;border-bottom:1px solid rgba(238,240,242,.3)}
 .ptable td{padding:2px 8px;height:18px;border-bottom:1px solid rgba(238,240,242,.08);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ptable table{table-layout:fixed}
 .ptable th:nth-child(1),.ptable th:nth-child(4){width:40px}
@@ -62,18 +62,18 @@ main{flex:1;display:flex;flex-direction:column;min-width:0;min-height:0}
 .ptable td.n{color:rgba(238,240,242,.6);width:34px}
 .ptable td.e{color:rgba(238,240,242,.35)}
 .ptable td.ed{padding:0 2px}
-.tin{width:100%;height:18px;background:transparent;border:1px solid transparent;border-radius:2px;color:var(--ink);font:11px var(--mono);padding:0 5px}
+.tin{width:100%;height:18px;background:transparent;border:1px solid transparent;border-radius:2px;color:var(--ink);font:12px var(--mono);padding:0 5px}
 .tin::placeholder{color:rgba(238,240,242,.35)}
 .tin:hover{border-color:rgba(238,240,242,.2)}
 .tin:focus{outline:none;border-color:var(--accent);background:rgba(0,0,0,.25)}
-.tsel{height:18px;background-color:transparent;background-position:right 4px center;border:1px solid transparent;border-radius:2px;font:11px var(--mono);padding:0 18px 0 4px;cursor:pointer;box-shadow:none}
+.tsel{height:18px;background-color:transparent;background-position:right 4px center;border:1px solid transparent;border-radius:2px;font:12px var(--mono);padding:0 18px 0 4px;cursor:pointer;box-shadow:none}
 .tsel:hover{border-color:rgba(238,240,242,.2)}
 .tsel:focus{outline:none;border-color:var(--accent)}
 .tsel option{background:#1a2029;color:var(--text)}
 .titles.renaming #pbName{display:inline-block}
-#pbMeta{color:var(--dim);font-size:11.5px;margin-top:1px}
+#pbMeta{color:var(--dim);font-size:12.5px;margin-top:1px}
 .ctl{display:flex;align-items:center;gap:6px}
-.ctl label{color:var(--dim);font-size:11.5px}
+.ctl label{color:var(--dim);font-size:12.5px}
 /* Flat dropdowns: drop the native macOS glossy/3D look, draw a plain arrow instead */
 select,select.btn{-webkit-appearance:none;-moz-appearance:none;appearance:none;background-repeat:no-repeat;
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%238d98a8' stroke-width='1.5'/%3E%3C/svg%3E")}
@@ -82,9 +82,19 @@ input[type=range]{width:110px;accent-color:var(--accent)}
 #scroller{flex:1;overflow:auto;background:var(--bp);min-height:0}
 #board{position:relative;margin:20px}
 #board svg{position:absolute;inset:0;display:block}
+#board svg .jhit{cursor:pointer}
+#board svg text.jn{pointer-events:none}
+#board svg text.jn.pin{fill:#9ec9f0;font-weight:800;text-decoration:underline}
+.ptable td.hl,#gearWrap tbody tr.hl td{background:rgba(158,201,240,.16)}
+#board svg .ring,#board svg .hole{cursor:pointer}
+/* lit label: thin halo in the jack's color, just outside the box */
+.lbl.lit,.mlbl.lit{box-shadow:0 0 0 2px #0d2a4a,0 0 0 3.5px var(--lit)}
+.ptable td.n{cursor:pointer}
+.ptable td.n.pin,#gearWrap td.rown.pin{color:#9ec9f0;font-weight:800;text-decoration:underline}
+#gearWrap td.rown{cursor:pointer}
 
 /* Labels on the drawing */
-.lbl{position:absolute;height:22px;padding:0 3px;text-align:center;font:500 10.5px var(--narrow);font-stretch:condensed;color:#0d1b2a;
+.lbl{position:absolute;height:22px;padding:0 3px;text-align:center;font:500 11.5px var(--narrow);font-stretch:condensed;color:#0d1b2a;
   background:#eef3f8;border:1px solid #9fb6cc;border-radius:3px}
 .lbl::placeholder{color:#5c6876;font-style:italic;opacity:1}
 .lbl:not(.filled){background:#aab4bf;border-color:#8a96a3}
@@ -95,22 +105,22 @@ input[type=range]{width:110px;accent-color:var(--accent)}
 .lbl.filled{background:var(--bg,#fffbe9);border-color:var(--bd,#d8c88e);color:var(--fg,#0d1b2a)}
 .lbl.inrun{display:none}
 .lbl.inrun.open{display:block}
-.mlbl{position:absolute;height:22px;padding:0 6px;font:500 10.5px var(--narrow);font-stretch:condensed;color:var(--fg,#0d1b2a);background:var(--bg,#fffbe9);border:1px solid var(--bd,#d8c88e);border-radius:3px;
+.mlbl{position:absolute;height:22px;padding:0 1px;font:500 11.5px var(--narrow);font-stretch:condensed;color:var(--fg,#0d1b2a);background:var(--bg,#fffbe9);border:1px solid var(--bd,#d8c88e);border-radius:3px;
   display:flex;align-items:center;justify-content:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:text}
 .mlbl:hover{filter:brightness(.97)}
 /* Gear list */
-#gearWrap{margin:28px 0 48px;font:11px var(--mono);color:var(--ink)}
+#gearWrap{margin:28px 0 48px;font:12px var(--mono);color:var(--ink)}
 #gearWrap .gbox{border:1px solid #eef0f2;background:rgba(9,30,56,.55)}
 #gearWrap .ghead{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:8px 10px;border-bottom:1px solid rgba(238,240,242,.55)}
 #gearWrap .ghead.gfoot{border-bottom:0;border-top:1px solid rgba(238,240,242,.55);padding:3px 8px;gap:5px}
-#gearWrap .ghead .ttl{font-size:8.5px;letter-spacing:.06em;color:rgba(238,240,242,.6);font-weight:600}
+#gearWrap .ghead .ttl{font-size:9.5px;letter-spacing:.06em;color:rgba(238,240,242,.6);font-weight:600}
 #gearWrap .ghead .sp{flex:1}
-#gearWrap .btn{font:10px var(--sans);padding:2px 8px;border-radius:5px}
+#gearWrap .btn{font:11px var(--sans);padding:2px 8px;border-radius:5px}
 #gearWrap .gcats{display:flex;flex-wrap:wrap;gap:8px 14px;padding:8px 10px;border-bottom:1px solid rgba(238,240,242,.3)}
-#gearWrap .gcats .lab{font-size:9.5px;letter-spacing:.06em;color:rgba(238,240,242,.6);font-weight:600;align-self:center}
+#gearWrap .gcats .lab{font-size:10.5px;letter-spacing:.06em;color:rgba(238,240,242,.6);font-weight:600;align-self:center}
 #gearWrap .gcat-item{display:flex;align-items:center;gap:6px}
 #gearWrap .chip{display:inline-block;padding:1px 7px;border-radius:3px;border:1px solid var(--bd,#d8c88e);background:var(--bg,#fffbe9);color:var(--fg,#0d1b2a);white-space:nowrap}
-#gearWrap select.gcat{height:20px;font:11px var(--mono);color:var(--text);background-color:var(--chrome-3);border:1px solid var(--line);border-radius:4px;padding:0 20px 0 6px;background-position:right 6px center;cursor:pointer}
+#gearWrap select.gcat{height:20px;font:12px var(--mono);color:var(--text);background-color:var(--chrome-3);border:1px solid var(--line);border-radius:4px;padding:0 20px 0 6px;background-position:right 6px center;cursor:pointer}
 #gearWrap .gscroll{overflow:auto;max-height:340px}
 #gearWrap thead th{position:sticky;top:0;background:#0f2a4a;z-index:1}
 #gearWrap .gcatbox{margin-bottom:28px;border:0;background:none}
@@ -119,30 +129,31 @@ input[type=range]{width:110px;accent-color:var(--accent)}
 #gearWrap .gcatbox .gcat-item{gap:8px}
 #gearWrap .gcatbox .chip{min-width:104px;text-align:center;box-sizing:border-box}
 #gearWrap .gcatbox select.gcat{width:118px}
-#gearWrap .gcell{width:100%;min-width:0;height:20px;background:transparent;border:1px solid transparent;border-radius:2px;color:var(--ink);font:11px var(--mono);padding:0 5px}
+#gearWrap .gcell{width:100%;min-width:0;height:20px;background:transparent;border:1px solid transparent;border-radius:2px;color:var(--ink);font:12px var(--mono);padding:0 5px}
 #gearWrap .gcell:hover{border-color:rgba(238,240,242,.2)}
 #gearWrap .gcell:focus{outline:none;border-color:var(--accent);background:rgba(0,0,0,.25)}
 #gearWrap .gcell.cat{background:var(--bg,transparent);color:var(--fg,var(--ink));border-color:var(--bd,transparent)}
 #gearWrap .gcell.cat:focus{background:rgba(0,0,0,.25);color:var(--ink);border-color:var(--accent)}
 #gearWrap td.cellw{padding:0 2px}
-#gearWrap .urlw{display:flex;align-items:center;gap:4px}
-#gearWrap .open{color:var(--accent);text-decoration:none;font-size:12px;padding:0 3px;border-radius:3px}
-#gearWrap .open:hover{background:rgba(255,255,255,.08)}
 #gearWrap .gnick::placeholder{font-style:italic;color:var(--ink);opacity:.45}
 #gearWrap td.rown{color:rgba(238,240,242,.5);text-align:right;padding-right:10px;width:1%}
-#gearWrap .lnk{background:none;border:0;cursor:pointer;font-size:11px;padding:0 3px;border-radius:3px;opacity:.35;filter:grayscale(1)}
-#gearWrap .lnk.on{opacity:.8;filter:none}
-#gearWrap .lnk:hover{opacity:1;background:rgba(255,255,255,.08)}
-#gearWrap .gcell.linked{color:#9fd8ff;text-decoration:underline;text-decoration-color:rgba(159,216,255,.4);text-underline-offset:2px}
-#gearWrap .del{background:none;border:0;color:rgba(238,240,242,.4);cursor:pointer;font-size:14px;padding:0 6px;border-radius:3px}
+#gearWrap td.man{text-align:center;padding:0 4px;width:1%}
+#gearWrap th.man{text-align:center}
+#gearWrap .mic{background:none;border:0;cursor:pointer;padding:1px 4px;border-radius:3px;line-height:0;vertical-align:middle}
+#gearWrap .mic svg{display:block}
+#gearWrap .mic.found{color:#9ec9f0}
+#gearWrap .mic.missing{color:rgba(238,240,242,.35)}
+#gearWrap .mic:hover{background:rgba(255,255,255,.08)}
+#gearWrap .mic.missing:hover{color:rgba(238,240,242,.75)}
+#gearWrap .del{background:none;border:0;color:rgba(238,240,242,.4);cursor:pointer;font-size:15.5px;padding:0 6px;border-radius:3px}
 #gearWrap .del:hover{color:#ff8f8f;background:rgba(255,255,255,.06)}
 #gearDialog{width:560px}
-#gearDialog textarea{width:100%;height:110px;background:var(--chrome);color:var(--text);border:1px solid var(--line);border-radius:6px;font:11px var(--mono);padding:6px 8px;resize:vertical}
+#gearDialog textarea{width:100%;height:110px;background:var(--chrome);color:var(--text);border:1px solid var(--line);border-radius:6px;font:12px var(--mono);padding:6px 8px;resize:vertical}
 #gearWrap table{border-collapse:collapse;width:100%}
 #gearWrap th.sortable{cursor:pointer;user-select:none}
 #gearWrap th.sortable:hover{color:var(--ink)}
 #gearWrap th .arr{color:var(--accent);margin-left:4px}
-#gearWrap th{font-size:10.5px;letter-spacing:.06em;color:rgba(238,240,242,.6);text-align:left;font-weight:600;padding:5px 8px;border-bottom:1px solid rgba(238,240,242,.3);white-space:nowrap;text-transform:uppercase}
+#gearWrap th{font-size:11.5px;letter-spacing:.06em;color:rgba(238,240,242,.6);text-align:left;font-weight:600;padding:5px 8px;border-bottom:1px solid rgba(238,240,242,.3);white-space:nowrap;text-transform:uppercase}
 #gearWrap td{padding:2px 8px;height:20px;border-bottom:1px solid rgba(238,240,242,.08);white-space:nowrap;max-width:220px;overflow:hidden;text-overflow:ellipsis}
 #gearWrap td.ed{padding:0 2px;min-width:150px}
 #gearWrap .empty{padding:18px 10px;color:rgba(238,240,242,.65)}
@@ -151,7 +162,7 @@ input[type=range]{width:110px;accent-color:var(--accent)}
 .mlbl:focus{outline:2px solid var(--accent);outline-offset:0}
 .mlbl.open{display:none}
 .mode{position:absolute;width:30px;height:18px;border-radius:4px;background:var(--bp);border:1px solid currentColor;
-  font:700 10px var(--mono);cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center}
+  font:700 11px var(--mono);cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center}
 .mode.rear{border-style:dashed}
 .mode:hover{background:#1b4677}
 .mode:focus-visible{outline:2px solid #fff;outline-offset:1px}
@@ -159,14 +170,14 @@ input[type=range]{width:110px;accent-color:var(--accent)}
 
 /* Popovers */
 .pop{position:fixed;z-index:50;background:var(--chrome-2);border:1px solid #3a4658;border-radius:10px;box-shadow:0 12px 32px #0009;padding:12px;width:320px}
-.pop h3{margin:0 0 2px;font-size:13.5px}
-.pop .sub{color:var(--dim);font-size:11.5px;margin-bottom:8px}
+.pop h3{margin:0 0 2px;font-size:15px}
+.pop .sub{color:var(--dim);font-size:12.5px;margin-bottom:8px}
 .opt{display:flex;gap:10px;align-items:flex-start;width:100%;text-align:left;background:none;border:0;border-radius:7px;padding:7px 6px;cursor:pointer}
 .opt:hover:not(:disabled){background:var(--chrome-3)}
 .opt:disabled{opacity:.45;cursor:not-allowed}
-.opt .tag{flex:none;width:32px;height:20px;border-radius:4px;background:var(--bp);font:700 10.5px var(--mono);display:flex;align-items:center;justify-content:center}
+.opt .tag{flex:none;width:32px;height:20px;border-radius:4px;background:var(--bp);font:700 11.5px var(--mono);display:flex;align-items:center;justify-content:center}
 .opt .t{font-weight:500}
-.opt .d{color:var(--dim);font-size:11.5px}
+.opt .d{color:var(--dim);font-size:12.5px}
 .opt .chk{margin-left:auto;color:var(--accent);font-weight:700}
 .opt.cur .t{font-weight:700}
 .menu{position:fixed;z-index:50;background:var(--chrome-2);border:1px solid #3a4658;border-radius:8px;box-shadow:0 12px 32px #0009;padding:4px;min-width:180px}
@@ -175,21 +186,21 @@ input[type=range]{width:110px;accent-color:var(--accent)}
 .menu button:disabled{opacity:.4;cursor:default}
 .menu hr{border:0;border-top:1px solid var(--line);margin:4px 2px}
 .menu .danger{color:#ff8f8f}
-.menu .mh{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--dim);font-weight:600;padding:6px 10px 2px}
-.menu .mnote{color:var(--dim);font-size:11px;padding:4px 10px 6px;max-width:240px}
+.menu .mh{font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--dim);font-weight:600;padding:6px 10px 2px}
+.menu .mnote{color:var(--dim);font-size:12px;padding:4px 10px 6px;max-width:240px}
 .menu button .ck{display:inline-block;width:16px;color:var(--accent)}
 .menu button small{color:var(--dim);margin-left:6px}
 
 dialog{background:var(--chrome-2);color:var(--text);border:1px solid #3a4658;border-radius:12px;padding:18px;width:440px;max-width:92vw}
 dialog::backdrop{background:#0008}
-dialog h2{margin:0 0 4px;font-size:16px}
-dialog p{color:var(--dim);font-size:12px;margin:0 0 10px}
+dialog h2{margin:0 0 4px;font-size:17.5px}
+dialog p{color:var(--dim);font-size:13px;margin:0 0 10px}
 .field{width:100%;background:var(--chrome);border:1px solid var(--line);border-radius:6px;padding:6px 8px}
 .field:focus{outline:none;border-color:var(--accent)}
 #sugList{list-style:none;margin:10px 0;padding:0;max-height:260px;overflow:auto;border:1px solid var(--line);border-radius:6px}
 #sugList li{display:flex;align-items:center;justify-content:space-between;padding:5px 10px;border-bottom:1px solid #ffffff0a}
 #sugList li:last-child{border-bottom:0}
-#sugList .x{background:none;border:0;color:var(--dim);cursor:pointer;font-size:15px;border-radius:4px;padding:0 6px}
+#sugList .x{background:none;border:0;color:var(--dim);cursor:pointer;font-size:16.5px;border-radius:4px;padding:0 6px}
 #sugList .x:hover{color:#ff8f8f;background:#ffffff10}
 #sugList .empty{color:var(--dim);justify-content:center}
 .drow{display:flex;gap:8px;align-items:center;margin-top:8px}
@@ -197,12 +208,12 @@ dialog p{color:var(--dim);font-size:12px;margin:0 0 10px}
 
 #impDialog{width:560px}
 .istep{border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin-top:10px}
-.ihead{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--dim);font-weight:600;margin-bottom:6px}
+.ihead{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--dim);font-weight:600;margin-bottom:6px}
 .iopt{display:flex;gap:8px;align-items:flex-start;padding:5px 2px;cursor:pointer}
 .iopt input{margin-top:3px;accent-color:var(--accent)}
-#impDialog .d{color:var(--dim);font-size:11.5px}
+#impDialog .d{color:var(--dim);font-size:12.5px}
 .btn:disabled{opacity:.45;cursor:not-allowed}
-#impResult,#gearResult{margin-top:10px;font-size:12px}
+#impResult,#gearResult{margin-top:10px;font-size:13px}
 #gearResult .ok{color:#9be7a8} #gearResult .err{color:#ff9d8f}
 #impResult:empty{display:none}
 #impResult .ok{color:#9be7a8}
@@ -210,7 +221,7 @@ dialog p{color:var(--dim);font-size:12px;margin:0 0 10px}
 #impResult ul{margin:4px 0 0;padding-left:18px;color:var(--dim);max-height:110px;overflow:auto}
 #toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:#2a3340;border:1px solid #3a4658;padding:8px 14px;border-radius:8px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:60}
 #toast.show{opacity:1}
-#storageWarn{display:none;background:#5a2a1e;color:#ffd9cf;padding:6px 16px;font-size:12px}
+#storageWarn{display:none;background:#5a2a1e;color:#ffd9cf;padding:6px 16px;font-size:13px}
 #storageWarn.show{display:block}
 </style>
 </head>
@@ -256,7 +267,7 @@ dialog p{color:var(--dim);font-size:12px;margin:0 0 10px}
   <div class="drow">
     <button class="btn" id="sugCollect" title="Collect every label currently on any patchbay">Add All Labels in Use</button>
     <span class="spacer"></span>
-    <span id="sugCount" style="color:var(--dim);font-size:11.5px"></span>
+    <span id="sugCount" style="color:var(--dim);font-size:12.5px"></span>
     <button class="btn primary" id="sugDone">Done</button>
   </div>
 </dialog>
@@ -289,7 +300,7 @@ dialog p{color:var(--dim);font-size:12px;margin:0 0 10px}
   <div class="istep">
     <div class="ihead">1 · What to do with the gear already here</div>
     <label class="iopt"><input type="radio" name="gearHow" value="replace">
-      <span><b>Replace the list</b><br><span class="d">The list is replaced by the file. Nicknames and manual links in the file are used; for gear the file leaves them blank on, the ones already here are kept. Category colors are kept.</span></span></label>
+      <span><b>Replace the list</b><br><span class="d">The list is replaced by the file. Nicknames in the file are used; for gear the file leaves them blank on, the ones already here are kept. Category colors are kept.</span></span></label>
     <label class="iopt"><input type="radio" name="gearHow" value="add">
       <span><b>Keep my edits, add new gear only</b><br><span class="d">Gear already here stays as you edited it; only gear not already in the list (by Name + Brand) is added. New columns are added too.</span></span></label>
   </div>
@@ -402,9 +413,8 @@ function normGear(g) {
   if (!g || !Array.isArray(g.cols) || !Array.isArray(g.rows)) return { cols: [], rows: [], catColors: {} };
   const cols = g.cols.map(c => String(c));
   let rows = g.rows.filter(r => r && Array.isArray(r.cells))
-    .map(r => ({ cells: cols.map((_, i) => String(r.cells[i] == null ? "" : r.cells[i])), nick: typeof r.nick === "string" ? r.nick : "",
-                 url: typeof r.url === "string" ? r.url : "" }));
-  absorbUrlColumn(cols, rows);
+    .map(r => ({ cells: cols.map((_, i) => String(r.cells[i] == null ? "" : r.cells[i])), nick: typeof r.nick === "string" ? r.nick : "" }));
+  dropManualColumns(cols, rows);
   const hiN = cols.findIndex(c => /^#$|^no\.?$|^number$/i.test(String(c).trim()));
   if (hiN >= 0) rows.forEach((r, i) => { r.cells[hiN] = String(i + 1); });
   const catColors = {};
@@ -413,18 +423,18 @@ function normGear(g) {
   return { cols, rows, catColors };
 }
 
-/* A "Manual URL" column (from a CSV) is folded into each row's link, so the Manual name itself becomes clickable. */
 function absorbNickColumn(cols, rows) {
   const ni = cols.findIndex(c => /^nick\s*names?(\(s\))?$/i.test(String(c).trim()));
   if (ni < 0) return;
   for (const r of rows) { const v = (r.cells[ni] || "").trim(); if (v && !r.nick) r.nick = v; r.cells.splice(ni, 1); }
   cols.splice(ni, 1);
 }
-function absorbUrlColumn(cols, rows) {
-  const ui = cols.findIndex(c => /^manual\s*url$/i.test(String(c).trim()));
-  if (ui < 0) return;
-  for (const r of rows) { const u = (r.cells[ui] || "").trim(); if (u && !r.url) r.url = u; r.cells.splice(ui, 1); }
-  cols.splice(ui, 1);
+/* Manuals now come from the manual library (Repo Man…), so "Manual" and "Manual URL" columns are left out. */
+function dropManualColumns(cols, rows) {
+  for (let k = cols.length - 1; k >= 0; k--) {
+    if (!/^manual(\s*url)?$/i.test(String(cols[k]).trim())) continue;
+    cols.splice(k, 1); rows.forEach(r => r.cells.splice(k, 1));
+  }
 }
 
 /** Accepts saved or imported data and returns a clean, complete state (or null). */
@@ -762,7 +772,7 @@ function layoutFor(pb) {
   const g = MODELS[pb.model].geo, s = state.scale;
   // Label text grows with zoom: 9.5 px at the normal fit, larger when zoomed in.
   // Condensed label text: 10.5 px at the normal fit, larger when zoomed in.
-  const fs = Math.max(11.5, Math.round(2.5 * s * 2) / 2), lh = Math.max(24, Math.round(fs * 1.8));
+  const fs = Math.max(12.5, Math.round(2.75 * s * 2) / 2), lh = Math.max(24, Math.round(fs * 1.8));
   const k = Math.max(9.5, Math.round(1.75 * s * 2) / 2) / 9.5;   // routing buttons/key scale as before
   const L = { s, g, marginX: 16, fs, lh, k };
   L.topLabelY = 11 + lh / 2;
@@ -821,15 +831,20 @@ function svgFor(pb, L) {
     const cx = L.jackX(c.id), ty = L.y(g.topY), by = L.y(g.botY);
     o.push(linkLine(cx, ty + g.jackR * s, by - g.jackR * s, c.mode));
     [[ty, c.id, -1, "top"], [by, c.id + CHANNELS, 1, "bottom"]].forEach(([cy, num, dir, row]) => {
-      o.push(`<circle class="ring" data-ring="${row}-${c.id}" cx="${cx}" cy="${cy}" r="${g.jackR * s}" fill="rgba(17,53,94,.35)" stroke="${INK}"/>`);
-      o.push(`<circle cx="${cx}" cy="${cy}" r="${g.holeR * s}" fill="rgba(0,0,0,.55)" stroke="${DIM}" stroke-width=".7"/>`);
+      o.push(`<circle class="ring" data-ring="${row}-${c.id}" data-j="${row}-${c.id}" data-pin="jack:${row}-${c.id}" cx="${cx}" cy="${cy}" r="${g.jackR * s}" fill="rgba(17,53,94,.35)" stroke="${INK}"/>`);
+      o.push(`<circle class="hole" data-j="${row}-${c.id}" data-pin="jack:${row}-${c.id}" cx="${cx}" cy="${cy}" r="${g.holeR * s}" fill="rgba(0,0,0,.55)" stroke="${DIM}" stroke-width=".7"/>`);
       // centered between the jack's outer ring and the panel edge
       const ny = dir < 0 ? (L.panelTop + cy - g.jackR * s) / 2 : (cy + g.jackR * s + L.panelBottom) / 2;
-      o.push(t(cx, ny, num, ns, INK, "middle", 500));
+      o.push(t(cx, ny, num, ns, INK, "middle", 500, `class="jn" data-pk="jack:${row}-${c.id}"`));
+      // click target for the number (pins the highlight)
+      o.push(`<rect class="jhit" data-j="${row}-${c.id}" data-pin="jack:${row}-${c.id}" x="${cx - ns * 1.1}" y="${ny - ns * 0.75}" width="${ns * 2.2}" height="${ns * 1.5}" fill="transparent"/>`);
     });
     // Leaders to the label boxes
-    o.push(`<line x1="${cx}" y1="${L.topLabelY + L.lh / 2 + 1}" x2="${cx}" y2="${L.panelTop}" stroke="${LEAD}" stroke-width="${Math.max(1, L.k)}" stroke-dasharray="${3 * L.k} ${2 * L.k}"/>`);
-    o.push(`<line x1="${cx}" y1="${L.panelBottom}" x2="${cx}" y2="${L.botLabelY - L.lh / 2 - 1}" stroke="${LEAD}" stroke-width="${Math.max(1, L.k)}" stroke-dasharray="${3 * L.k} ${2 * L.k}"/>`);
+    o.push(`<line class="lead" data-lead="top-${c.id}" x1="${cx}" y1="${L.topLabelY + L.lh / 2 + 1}" x2="${cx}" y2="${L.panelTop}" stroke="${LEAD}" stroke-width="${Math.max(1, L.k)}" stroke-dasharray="${3 * L.k} ${2 * L.k}"/>`);
+    o.push(`<line class="lead" data-lead="bottom-${c.id}" x1="${cx}" y1="${L.panelBottom}" x2="${cx}" y2="${L.botLabelY - L.lh / 2 - 1}" stroke="${LEAD}" stroke-width="${Math.max(1, L.k)}" stroke-dasharray="${3 * L.k} ${2 * L.k}"/>`);
+    // wider invisible lines over the leaders so they're easy to hover
+    o.push(`<line data-j="top-${c.id}" x1="${cx}" y1="${L.topLabelY + L.lh / 2 + 1}" x2="${cx}" y2="${L.panelTop}" stroke="transparent" stroke-width="9"/>`);
+    o.push(`<line data-j="bottom-${c.id}" x1="${cx}" y1="${L.panelBottom}" x2="${cx}" y2="${L.botLabelY - L.lh / 2 - 1}" stroke="transparent" stroke-width="9"/>`);
   }
 
   const l = L.panelLeft, r = Math.max(L.panelRight, L.totalW - L.marginX);
@@ -883,7 +898,7 @@ function renderBoard() {
   for (const c of pb.channels) {
     parts.push(`<button class="mode ${c.mode}${model.front ? "" : " rear"}" data-ch="${c.id}"
       title="Jacks ${c.id} / ${c.id + CHANNELS}: ${MODES[c.mode].title} — click to change"
-      style="left:${L.jackX(c.id) - 15 * L.k}px;top:${L.y(L.g.modeY) - 9 * L.k}px;width:${30 * L.k}px;height:${18 * L.k}px;font-size:${10 * L.k}px;border-radius:${4 * L.k}px">${MODES[c.mode].short}</button>`);
+      style="left:${L.jackX(c.id) - 15 * L.k}px;top:${L.y(L.g.modeY) - 9 * L.k}px;width:${30 * L.k}px;height:${18 * L.k}px;font-size:${11 * L.k}px;border-radius:${4 * L.k}px">${MODES[c.mode].short}</button>`);
   }
   // Two tables, each lined up under its half of the panel (1–12 and 13–24).
   const half = CHANNELS / 2, gap = 20;
@@ -1119,7 +1134,7 @@ function renderTable() {
   if (body.dataset.pb !== pb.id || body.querySelectorAll("tbody tr").length !== CHANNELS) {
     const tin = (c, row) => `<td class="ed"><input class="tin" list="labelList" autocomplete="off" spellcheck="false" placeholder="—"
       data-ch="${c.id}" data-row="${row}" aria-label="Label for jack ${row === "top" ? c.id : c.id + CHANNELS}"></td>`;
-    const rowHTML = c => `<tr><td class="n">${c.id}</td>${tin(c, "top")}${tin(c, "bottom")}<td class="n">${c.id + CHANNELS}</td>
+    const rowHTML = c => `<tr data-ch="${c.id}"><td class="n" data-pin="jack:top-${c.id}" data-pk="jack:top-${c.id}" title="Click to keep jack ${c.id} highlighted">${c.id}</td>${tin(c, "top")}${tin(c, "bottom")}<td class="n" data-pin="jack:bottom-${c.id}" data-pk="jack:bottom-${c.id}" title="Click to keep jack ${c.id + CHANNELS} highlighted">${c.id + CHANNELS}</td>
       <td class="ed"><select class="tsel" data-ch="${c.id}" aria-label="Routing for jacks ${c.id} / ${c.id + CHANNELS}">
       ${model.modes.map(k => `<option value="${k}">${MODES[k].title}</option>`).join("")}</select></td></tr>`;
     for (const tb of body.querySelectorAll("tbody")) {
@@ -1140,6 +1155,7 @@ function renderTable() {
     if (sel.value !== c.mode) sel.value = c.mode;
     sel.style.color = MODES[c.mode].color;
   }
+  applyHighlight();
 }
 
 // Table edits flow into the patchbay boxes
@@ -1405,7 +1421,7 @@ function gearKeys() {
   for (const r of g.rows) {
     const cat = ci >= 0 ? r.cells[ci].trim() : "";
     const names = [...r.nick.split(","), ni >= 0 ? r.cells[ni] : ""].map(x => x.trim()).filter(Boolean);
-    for (const n of names) keys.push({ k: n.toLowerCase(), cat });
+    for (const n of names) keys.push({ k: n.toLowerCase(), cat, row: r });
   }
   keys.sort((a, b) => b.k.length - a.k.length);
   return (gearKeysCache = keys);
@@ -1420,6 +1436,14 @@ function colorForLabel(label) {
       return Number.isInteger(i) ? GEAR_COLORS[i] : null;
     }
   }
+  return null;
+}
+/** The gear-list row a label belongs to (same matching as the colors), or null. */
+function gearRowForLabel(label) {
+  const v = String(label || "").trim().toLowerCase();
+  if (!v) return null;
+  for (const { k, row } of gearKeys())
+    if (v === k || (v.startsWith(k) && /[^a-z0-9]/i.test(v.charAt(k.length)))) return row;
   return null;
 }
 function colorBox(el, label) {
@@ -1442,7 +1466,118 @@ function applyLabelColors() {
   document.querySelectorAll("#ptable .tin").forEach(colorTableCell);
   document.querySelectorAll("#board .lbl").forEach(el => colorBox(el, el.value));
   document.querySelectorAll("#board .mlbl").forEach(m => colorBox(m, m.dataset.label));
+  applyHighlight();
 }
+
+/* ---------- Highlight: panel ⇄ patch table ⇄ gear list ----------
+   Hovering a jack (ring, number, leader line or label box), a table row or a gear row lights up the
+   matching jacks (ring filled in its color), patch-table rows and gear rows. Clicking a jack number,
+   a CH number or a gear row number keeps it lit (click again to release; Esc releases all). */
+const RING_FILL = "rgba(17,53,94,.35)", EMPTY_RING = "#8d98a8";
+let hoverKey = null;
+const pins = new Set();               // "jack:top-5", "ch:5", "gear:<row index>"
+function hlKeyFor(el) {
+  if (!el || !el.closest) return null;
+  const j = el.closest("#board [data-j]");
+  if (j) return "jack:" + j.dataset.j;
+  const m = el.closest("#board .mlbl");
+  if (m) return `run:${m.dataset.row}-${m.dataset.from}-${m.dataset.to}`;
+  const l = el.closest("#board .lbl");
+  if (l) return `jack:${l.dataset.row}-${l.dataset.ch}`;
+  const td = el.closest("#ptable td");
+  if (td) {
+    const tin = td.querySelector(".tin");
+    if (tin) return `jack:${tin.dataset.row}-${tin.dataset.ch}`;
+    if (td.dataset.pin) return td.dataset.pin;                 // CH numbers: left = top jack, right = bottom jack
+    return "ch:" + td.parentNode.dataset.ch;                  // MODE: both jacks
+  }
+  const gr = el.closest("#gearBody tbody tr[data-i]");
+  if (gr) return "gear:" + gr.dataset.i;
+  return null;
+}
+function addJacks(key, pb, jacks, gearRows) {
+  const [kind, v] = [key.slice(0, key.indexOf(":")), key.slice(key.indexOf(":") + 1)];
+  if (kind === "jack") jacks.add(v);
+  else if (kind === "ch") { jacks.add("top-" + v); jacks.add("bottom-" + v); }
+  else if (kind === "run") { const [row, a, b] = v.split("-"); for (let c = +a; c <= +b; c++) jacks.add(`${row}-${c}`); }
+  else if (kind === "gear") {
+    const r = gearData().rows[+v];
+    if (!r) return;
+    gearRows.add(r);
+    if (pb) for (const c of pb.channels) for (const row of ["top", "bottom"])
+      if (gearRowForLabel(c[row]) === r) jacks.add(`${row}-${c.id}`);
+  }
+}
+function applyHighlight() {
+  const pb = current(), jacks = new Set(), gearRows = new Set();
+  for (const k of pins) addJacks(k, pb, jacks, gearRows);
+  if (hoverKey) addJacks(hoverKey, pb, jacks, gearRows);
+  if (pb) for (const j of jacks) {
+    const [row, ch] = j.split("-"), c = pb.channels[+ch - 1];
+    const r = c && gearRowForLabel(c[row]); if (r) gearRows.add(r);
+  }
+  document.querySelectorAll("#board .ring").forEach(ring => {
+    let fill = RING_FILL;
+    if (jacks.has(ring.dataset.ring)) {
+      const [row, ch] = ring.dataset.ring.split("-");
+      fill = pb && pb.channels[+ch - 1][row].trim() ? ring.getAttribute("stroke") : EMPTY_RING;
+    }
+    if (ring.getAttribute("fill") !== fill) ring.setAttribute("fill", fill);
+  });
+  // the center stays dark (solid) so the lit ring pops
+  document.querySelectorAll("#board .hole").forEach(h => {
+    const fill = jacks.has(h.dataset.j) ? "#08111c" : "rgba(0,0,0,.55)";
+    if (h.getAttribute("fill") !== fill) h.setAttribute("fill", fill);
+  });
+  // Patch table: the top jack is the left CH + TOP cells, the bottom jack the BOTTOM + right CH cells
+  document.querySelectorAll("#ptable tbody tr[data-ch]").forEach(tr => {
+    const t = jacks.has("top-" + tr.dataset.ch), b = jacks.has("bottom-" + tr.dataset.ch), tds = tr.children;
+    [t, t, b, b, false].forEach((on, k) => tds[k] && tds[k].classList.toggle("hl", on));
+  });
+  // Labels get a thin halo and leader lines turn solid, both in the jack's color
+  const litColor = j => {
+    const [row, ch] = j.split("-"), c = pb && pb.channels[+ch - 1];
+    if (!c || !c[row].trim()) return EMPTY_RING;
+    const ring = document.querySelector(`#board .ring[data-ring="${j}"]`);
+    return ring ? ring.getAttribute("stroke") : INK;
+  };
+  document.querySelectorAll("#board .lead").forEach(l => {
+    const on = jacks.has(l.dataset.lead);
+    if (!l.dataset.dash) { l.dataset.dash = l.getAttribute("stroke-dasharray"); l.dataset.w = l.getAttribute("stroke-width"); }
+    l.setAttribute("stroke", on ? litColor(l.dataset.lead) : LEAD);
+    l.setAttribute("stroke-dasharray", on ? "none" : l.dataset.dash);
+    l.setAttribute("stroke-width", on ? +l.dataset.w + 0.8 : l.dataset.w);
+  });
+  const litBox = (el, j) => { el.classList.toggle("lit", !!j); if (j) el.style.setProperty("--lit", litColor(j)); };
+  document.querySelectorAll("#board .lbl").forEach(el => { const j = `${el.dataset.row}-${el.dataset.ch}`; litBox(el, jacks.has(j) ? j : null); });
+  document.querySelectorAll("#board .mlbl").forEach(m => {
+    let hit = null;
+    for (let c = +m.dataset.from; c <= +m.dataset.to && !hit; c++) if (jacks.has(`${m.dataset.row}-${c}`)) hit = `${m.dataset.row}-${c}`;
+    litBox(m, hit);
+  });
+  const rows = gearData().rows;
+  document.querySelectorAll("#gearBody tbody tr[data-i]").forEach(tr => tr.classList.toggle("hl", gearRows.has(rows[+tr.dataset.i])));
+  document.querySelectorAll("[data-pk]").forEach(el => el.classList.toggle("pin", pins.has(el.dataset.pk)));
+}
+document.addEventListener("mouseover", e => {
+  const k = hlKeyFor(e.target);
+  if (k !== hoverKey) { hoverKey = k; applyHighlight(); }
+});
+document.documentElement.addEventListener("mouseleave", () => { if (hoverKey) { hoverKey = null; applyHighlight(); } });
+document.addEventListener("click", e => {
+  const p = e.target.closest && e.target.closest("[data-pin]");
+  if (!p) return;
+  const k = p.dataset.pin;
+  if (pins.has(k)) pins.delete(k); else pins.add(k);
+  applyHighlight();
+});
+document.addEventListener("keydown", e => {
+  if (e.key !== "Escape" || !pins.size) return;
+  const a = document.activeElement;
+  if (a && /^(INPUT|SELECT|TEXTAREA)$/.test(a.tagName)) return;      // Esc in a box keeps its own meaning
+  if (document.querySelector("dialog[open]")) return;
+  pins.clear(); applyHighlight();
+});
 function positionGear() {
   const wrap = $("gearWrap");
   if (!lastGearBox) return;
@@ -1450,8 +1585,7 @@ function positionGear() {
   wrap.style.width = lastGearBox.width + "px";
 }
 
-const DEFAULT_GEAR_COLS = ["#", "Name", "Brand", "Category", "Subcategory", "Class", "Inputs", "Outputs", "Jacks", "Condition", "Manual"];
-const isURL = v => /^https?:\/\/\S+$/i.test(String(v).trim());
+const DEFAULT_GEAR_COLS = ["#", "Name", "Brand", "Category", "Subcategory", "Class", "Inputs", "Outputs", "Jacks", "Condition"];
 const chipVars = cat => {
   const i = gearData().catColors[String(cat).trim()];
   const c = Number.isInteger(i) ? GEAR_COLORS[i] : null;
@@ -1465,6 +1599,7 @@ function renderGear() {
     <div class="gbox"><div id="gearBody"></div>
       <div class="ghead gfoot"><span class="ttl" id="gearCount"></span><span class="sp"></span>
       <button class="btn" id="gearAdd" title="Add a blank row">+ Add Row</button>
+      <button class="btn" id="gearLib" title="${esc(libTitle())}">Repo Man…</button>
       <button class="btn" id="gearImport" title="Import your Gear List tab">Import…</button>
       <button class="btn" id="gearExport" title="Download the gear list with nicknames">Export CSV</button></div>
       <div class="gmsg"></div></div>`;
@@ -1515,7 +1650,7 @@ function renderGearTable() {
   const ths = disp.map(j => j === "nick"
       ? `<th class="sortable" data-sort="${g.cols.length}" title="Sort by nickname">NICKNAME(S)${arrow(g.cols.length)}</th>`
       : j === rowNumCol() ? `<th class="sortable" data-sort="orig" title="Back to the original order">${esc(g.cols[j])}</th>`
-      : `<th class="sortable" data-sort="${j}" title="Sort by ${esc(g.cols[j])}">${esc(g.cols[j])}${arrow(j)}</th>`).join("") + `<th></th>`;
+      : `<th class="sortable" data-sort="${j}" title="Sort by ${esc(g.cols[j])}">${esc(g.cols[j])}${arrow(j)}</th>`).join("") + `<th class="man">MANUAL</th><th></th>`;
   let order = g.rows.map((_, i) => i);
   if (srt.col != null) {
     const val = i => (srt.col === g.cols.length ? g.rows[i].nick : g.rows[i].cells[srt.col]).trim();
@@ -1526,27 +1661,19 @@ function renderGearTable() {
     });
   }
   const size = v => Math.max(4, Math.min(30, String(v).length + 1));
-  const mi = gearCol(/^manual$/i);
-  const cell = (v, i, j) => {
-    const inp = `<input class="gcell${j === ci ? " cat" : ""}${j === mi && g.rows[i].url ? " linked" : ""}" data-i="${i}" data-j="${j}" value="${esc(v)}" size="${size(v) + (j === ci ? 2 : 0)}" spellcheck="false" autocomplete="off"
-      ${j === ci ? `style="${chipVars(v)}"` : ""} title="${esc(j === mi && g.rows[i].url ? g.rows[i].url : v)}">`;
-    if (j === mi) {
-      const u = g.rows[i].url;
-      return `<td class="cellw"><span class="urlw">${inp}${u ? `<a class="open" href="${esc(u)}" target="_blank" rel="noopener" title="Open manual">↗</a>` : ""}
-        <button class="lnk${u ? " on" : ""}" data-link="${i}" title="${u ? "Change or remove the manual link" : "Add a link to the manual"}">🔗</button></span></td>`;
-    }
-    return `<td class="cellw">${isURL(v) ? `<span class="urlw">${inp}<a class="open" href="${esc(v.trim())}" target="_blank" rel="noopener" title="Open link">↗</a></span>` : inp}</td>`;
-  };
+  const cell = (v, i, j) => `<td class="cellw"><input class="gcell${j === ci ? " cat" : ""}" data-i="${i}" data-j="${j}" value="${esc(v)}" size="${size(v) + (j === ci ? 2 : 0)}" spellcheck="false" autocomplete="off"
+      ${j === ci ? `style="${chipVars(v)}"` : ""} title="${esc(v)}"></td>`;
   const hiC = rowNumCol();
   const trs = order.map((i, pos) => {
     const r = g.rows[i];
-    const tds = disp.map(j => j === hiC ? `<td class="rown">${pos + 1}</td>` : j === "nick"
+    const tds = disp.map(j => j === hiC ? `<td class="rown" data-pin="gear:${i}" data-pk="gear:${i}" title="Click to keep this gear highlighted">${pos + 1}</td>` : j === "nick"
       ? `<td class="cellw"><input class="gcell gnick" data-i="${i}" value="${esc(r.nick)}" size="${size(r.nick || (nameAt >= 0 ? r.cells[nameAt] : "") || "nickname")}" placeholder="${esc(nameAt >= 0 ? r.cells[nameAt] : "")}" spellcheck="false" autocomplete="off"
         title="Names used on the patchbay labels, separated by commas"></td>`
       : cell(r.cells[j], i, j));
-    return `<tr>${tds.join("")}<td><button class="del" data-del="${i}" title="Delete this row">×</button></td></tr>`;
+    return `<tr data-i="${i}">${tds.join("")}<td class="man" data-i="${i}">${manualIcon(i)}</td><td><button class="del" data-del="${i}" title="Delete this row">×</button></td></tr>`;
   }).join("");
   body.innerHTML = `<div class="gscroll"><table><thead><tr>${ths}</tr></thead><tbody>${trs}</tbody></table></div>`;
+  applyHighlight();
 }
 
 /** Parse a CSV/TSV (or rows pasted from Sheets) into {cols, data} or an error string. */
@@ -1565,19 +1692,20 @@ function parseGearTable(text) {
 function importGear(text, how) {
   const parsed = parseGearTable(text);
   if (typeof parsed === "string") return { error: parsed };
+  for (const k of [...pins]) if (k.startsWith("gear:")) pins.delete(k);   // row numbers change on import
   const g = gearData();
   const keyOf = (cells, cols) => {
     const ni = cols.findIndex(c => /^name$/i.test(c)), bi = cols.findIndex(c => /^brand$/i.test(c));
     return `${ni >= 0 ? cells[ni] : ""}|${bi >= 0 ? cells[bi] : ""}`.trim().toLowerCase();
   };
-  const incoming = parsed.data.map(cells => ({ cells, nick: "", url: "" }));
-  absorbUrlColumn(parsed.cols, incoming);
+  const incoming = parsed.data.map(cells => ({ cells, nick: "" }));
+  dropManualColumns(parsed.cols, incoming);
   absorbNickColumn(parsed.cols, incoming);
   if (how === "replace" || !g.rows.length) {
     const old = new Map(g.rows.map(r => [keyOf(r.cells, g.cols), r]));
     for (const r of incoming) {
       const o = old.get(keyOf(r.cells, parsed.cols));
-      if (o) { if (!r.nick) r.nick = o.nick; if (!r.url) r.url = o.url || ""; }   // nicknames and manual links carry over
+      if (o && !r.nick) r.nick = o.nick;                      // nicknames carry over
     }
     state.gear = { cols: parsed.cols, catColors: g.catColors || {}, rows: incoming };
     renumberGear(); invalidateGear(); save(); renderGear(); applyLabelColors();
@@ -1594,7 +1722,7 @@ function importGear(text, how) {
     if (have.has(k)) continue;
     const row = g.cols.map(() => "");
     parsed.cols.forEach((c, i) => { const j = colIndex(c); if (j >= 0) row[j] = inc.cells[i]; });
-    g.rows.push({ cells: row, nick: inc.nick, url: inc.url }); have.add(k); added++;
+    g.rows.push({ cells: row, nick: inc.nick }); have.add(k); added++;
   }
   renumberGear(); invalidateGear(); save(); renderGear(); applyLabelColors();
   return { msg: `Added ${added} new item${added === 1 ? "" : "s"}${newCols ? ` and ${newCols} new column${newCols === 1 ? "" : "s"}` : ""}. Existing gear was left as is.` };
@@ -1647,7 +1775,7 @@ $("gearWrap").addEventListener("click", e => {
   }
   if (e.target.closest("#gearAdd")) {
     if (!g.cols.length) g.cols = DEFAULT_GEAR_COLS.slice();
-    const row = { cells: g.cols.map(() => ""), nick: "", url: "" };
+    const row = { cells: g.cols.map(() => ""), nick: "" };
     const hi = rowNumCol();
     g.rows.push(row);
     renumberGear();
@@ -1659,19 +1787,16 @@ $("gearWrap").addEventListener("click", e => {
     if (el) { el.scrollIntoView({ block: "nearest" }); el.focus(); }
     return;
   }
-  const lnk = e.target.closest("[data-link]");
-  if (lnk) {
-    const r = g.rows[+lnk.dataset.link];
-    const v = prompt("Paste the link to this manual (leave empty to remove it):", r.url || "");
-    if (v === null) return;
-    r.url = v.trim(); save(); renderGearTable(); return;
-  }
+  if (e.target.closest("#gearLib")) { chooseLibrary(); return; }
+  const man = e.target.closest("[data-man]");
+  if (man) { manualClick(+man.dataset.man); return; }
   const del = e.target.closest("[data-del]");
   if (del) {
     const i = +del.dataset.del, ni = gearCol(/^name$/i);
     const name = (ni >= 0 && g.rows[i].cells[ni].trim()) || "this row";
     if (!confirm(`Delete “${name}” from the gear list?`)) return;
     g.rows.splice(i, 1);
+    for (const k of [...pins]) if (k.startsWith("gear:")) pins.delete(k);
     renumberGear();
     invalidateGear(); save(); renderGearCats(); renderGearTable(); applyLabelColors();
     return;
@@ -1679,8 +1804,8 @@ $("gearWrap").addEventListener("click", e => {
   if (e.target.closest("#gearExport")) {
     const q = x => /[",\n]/.test(x) ? `"${x.replace(/"/g, '""')}"` : x;
     const disp = gearDisplayOrder();
-    const lines = [disp.map(j => j === "nick" ? "Nickname(s)" : g.cols[j]).concat("Manual URL").map(q).join(",")]
-      .concat(g.rows.map(r => disp.map(j => j === "nick" ? r.nick : r.cells[j]).concat(r.url || "").map(q).join(",")));
+    const lines = [disp.map(j => j === "nick" ? "Nickname(s)" : g.cols[j]).map(q).join(",")]
+      .concat(g.rows.map(r => disp.map(j => j === "nick" ? r.nick : r.cells[j]).map(q).join(",")));
     const blob = new Blob(["﻿" + lines.join("\r\n") + "\r\n"], { type: "text/csv" });
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob); a.download = `Gear List ${todayISO()}.csv`;
@@ -1734,6 +1859,7 @@ $("gearWrap").addEventListener("input", e => {
     if (nk) nk.placeholder = el.value;
   }
   if (j === gearCol(/^name$/i) || j === gearCol(/^category$/i)) { invalidateGear(); applyLabelColors(); }
+  if (j === gearCol(/^name$/i) || j === gearCol(/^brand$/i)) updateManualIcons();
   save();
 });
 $("gearWrap").addEventListener("change", e => {
@@ -1744,13 +1870,109 @@ $("gearWrap").addEventListener("change", e => {
     document.querySelectorAll("#gearWrap .gcell.cat").forEach(c => c.setAttribute("style", chipVars(c.value)));
     return;
   }
-  // after editing a cell: refresh category list and the ↗ links (only when nothing in the table has focus)
+  // after editing a cell: refresh the category list (and the table when nothing in it has focus)
   if (el.classList.contains("gcell")) setTimeout(() => {
     renderGearCats();
     const a = document.activeElement;
     if (!a || !a.closest || !a.closest("#gearBody")) renderGearTable();
   }, 0);
 });
+
+/* ---------- Manual library (Mac app only) ----------
+   Library folder → one folder per Brand → "<Brand>-<Name>-OM.pdf" (spaces become underscores).
+   Matching ignores capitals; anything after "-OM-" is allowed ("…-OM-v1.1.pdf"). */
+const manualBridge = () => window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.manuals;
+let manualLib = { path: null, folders: null }, manualSig = "";
+const mWait = new Map(); let mSeq = 0;
+function manualCall(msg) {
+  const b = manualBridge();
+  if (!b) return Promise.resolve(null);
+  return new Promise(res => { const id = ++mSeq; mWait.set(id, res); b.postMessage(Object.assign({ id }, msg)); });
+}
+window.pcManualReply = (id, data) => { const r = mWait.get(id); if (r) { mWait.delete(id); r(data); } };
+window.pcRescan = () => manualCall({ op: "scan" }).then(applyLibrary);
+function libTitle() {
+  if (!manualBridge()) return "Manual library (patchCache Mac app only)";
+  return manualLib.path ? `Manual library: ${manualLib.path}${manualLib.missing ? " (folder not found)" : ""}\nClick to choose a different folder`
+    : "Choose the folder that holds your manuals";
+}
+function applyLibrary(data) {
+  if (!data) return;
+  const sig = JSON.stringify(data);
+  if (sig === manualSig) return;                               // nothing changed on disk
+  manualSig = sig;
+  manualLib = { path: data.path || null, folders: data.folders || null, missing: !!data.missing };
+  const b = $("gearLib"); if (b) b.title = libTitle();
+  updateManualIcons();
+}
+const nfc = s => String(s).normalize("NFC");
+const fileSafe = s => nfc(s).trim().replace(/[\/:]/g, "-").replace(/\s+/g, "_");
+const folderSafe = s => nfc(s).trim().replace(/[\/:]/g, "-");
+function brandFolder(brand) {
+  const want = folderSafe(brand).toLowerCase();
+  if (!want || !manualLib.folders) return null;
+  return Object.keys(manualLib.folders).find(f => nfc(f).toLowerCase() === want) || null;
+}
+const manualFileName = (folder, name) => `${fileSafe(folder)}-${fileSafe(name)}-OM.pdf`;
+function rowBrandName(i) {
+  const g = gearData(), r = g.rows[i], bi = gearCol(/^brand$/i), ni = gearCol(/^name$/i);
+  return { brand: bi >= 0 ? r.cells[bi].trim() : "", name: ni >= 0 ? r.cells[ni].trim() : "" };
+}
+/** The row's OM manual as "Folder/File.pdf", or null. */
+function findManual(i) {
+  const { brand, name } = rowBrandName(i);
+  if (!brand || !name) return null;
+  const f = brandFolder(brand);
+  if (!f) return null;
+  const stem = manualFileName(f, name).slice(0, -4).toLowerCase();       // "…-om"
+  const hits = manualLib.folders[f].filter(n => {
+    const l = nfc(n).toLowerCase();
+    return l === stem + ".pdf" || (l.startsWith(stem + "-") && l.endsWith(".pdf"));
+  }).sort((a, b) => a.localeCompare(b));
+  if (!hits.length) return null;
+  return f + "/" + (hits.find(h => nfc(h).toLowerCase() === stem + ".pdf") || hits[0]);
+}
+const PAGE = `<path d="M1.5 1.5h8.5l4.5 4.5v11.5h-13z" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"`;
+const ICON_FOUND = `<svg width="16" height="19" viewBox="0 0 16 19" aria-hidden="true">${PAGE}/><path d="M10 1.5v4.5h4.5" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>
+  <text x="8" y="14.2" text-anchor="middle" font-size="5.4" font-weight="700" font-family="ui-monospace,Menlo,monospace" fill="currentColor">OM</text></svg>`;
+const ICON_MISSING = `<svg width="16" height="19" viewBox="0 0 16 19" aria-hidden="true">${PAGE} stroke-dasharray="2 1.6"/><path d="M10 1.5v4.5h4.5" fill="none" stroke="currentColor" stroke-width="1.2" stroke-dasharray="2 1.6"/>
+  <path d="M8 9.2v5.2M5.4 11.8h5.2" stroke="currentColor" stroke-width="1.3"/></svg>`;
+function manualIcon(i) {
+  const hit = findManual(i);
+  return hit ? `<button class="mic found" data-man="${i}" title="Open manual\n${esc(hit)}">${ICON_FOUND}</button>`
+    : `<button class="mic missing" data-man="${i}" title="Import manual">${ICON_MISSING}</button>`;
+}
+function updateManualIcons() {
+  document.querySelectorAll("#gearBody td.man[data-i]").forEach(td => { td.innerHTML = manualIcon(+td.dataset.i); });
+}
+const MAC_ONLY = "Manuals work in the patchCache Mac app.\nA browser can’t open or add files on your drive.";
+async function chooseLibrary() {
+  if (!manualBridge()) { alert(MAC_ONLY); return; }
+  applyLibrary(await manualCall({ op: "choose" }));
+}
+async function manualClick(i) {
+  if (!manualBridge()) { alert(MAC_ONLY); return; }
+  if (!manualLib.path) { alert("Choose your manual library first.\nUse Repo Man… below the gear list."); return; }
+  if (manualLib.missing) { alert(`The manual library folder wasn’t found:\n${manualLib.path}\nUse Repo Man… to choose it again.`); return; }
+  const hit = findManual(i);
+  if (hit) {
+    const res = await manualCall({ op: "open", rel: hit });
+    if (res && res.error) { alert(res.error); pcRescan(); }
+    return;
+  }
+  const { brand, name } = rowBrandName(i);
+  if (!brand || !name) {
+    alert("This row needs both a Brand and a Name before a manual can be added.\nThe file is named from them: Brand-Name-OM.pdf");
+    return;
+  }
+  const folder = brandFolder(brand) || folderSafe(brand);
+  const file = manualFileName(folder, name);
+  const res = await manualCall({ op: "import", folder, file });
+  if (!res) return;
+  if (res.library) applyLibrary(res.library);
+  if (res.error) alert(res.error);
+  else if (res.done) toast(`Manual added: ${folder}/${file}`);
+}
 
 /* ---------- Backup / restore ---------- */
 function doBackup() {
@@ -1769,7 +1991,7 @@ $("importFile").addEventListener("change", async e => {
   if (!f) return;
   let data = null;
   try { data = normalize(JSON.parse(await f.text())); } catch (err) {}
-  if (!data) { alert("That file isn’t a PatchCache backup."); return; }
+  if (!data) { alert("That file isn’t a patchCache backup."); return; }
   if (!confirm(`Replace everything here with “${f.name}”?\n(${data.patchbays.length} patchbays, ${data.labels.length} saved labels)`)) return;
   state = data; saveNow(); renderAll(); toast("Backup restored");
 });
@@ -1783,6 +2005,7 @@ state.scale = Math.min(5.5, fitScale(CHANNELS)); setHalfView("all");
 renderAll();
 if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { if (!document.activeElement || !document.activeElement.classList.contains("lbl")) renderBoard(); });
 saveNow();
+pcRescan();
 </script>
 </body>
 </html>

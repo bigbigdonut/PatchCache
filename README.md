@@ -1,4 +1,4 @@
-# PatchCache
+# patchCache
 
 A small Mac app for documenting studio patchbays: what's patched where, how each pair is normalled, and what gear it belongs to.
 
@@ -7,7 +7,7 @@ A small Mac app for documenting studio patchbays: what's patched where, how each
 - Normal / Half Normal / Thru per pair (Thru isn't offered on the P48, which doesn't have it)
 - Patch Points table that edits in both directions, plus CSV import/export
 - Versions per patchbay (update, save as new, duplicate, delete)
-- Gear list with nicknames, manual links, sortable columns and type-ahead; category colors carry through to labels, jack rings and the table
+- Gear list with nicknames, a local manual library (Repo Man…: one folder per brand, `Brand-Name-OM.pdf`), sortable columns and type-ahead; category colors carry through to labels, jack rings and the table
 - Everything is stored locally — no accounts, no cloud
 
 ## Build (macOS 11+)
@@ -15,7 +15,7 @@ A small Mac app for documenting studio patchbays: what's patched where, how each
 1. Download or clone this repo.
 2. In Terminal: `bash build.sh`
    - If prompted, install Apple's free Command Line Tools, then run it again.
-3. Drag `build/PatchCache.app` into Applications.
+3. Drag `build/patchCache.app` into Applications.
 
 To update, replace `PatchCache.html` with a newer copy and run `bash build.sh` again. Your data isn't affected.
 
@@ -34,5 +34,5 @@ Use **Back Up…** / **Restore…** from the patchbay title menu for portable co
 | --- | --- |
 | `PatchCache.html` | The whole app (UI + logic) in one file |
 | `main.swift` | Native Mac window around the page; saves data to a file |
-| `build.sh` | Compiles the app and packages `PatchCache.app` |
+| `build.sh` | Compiles the app and packages `patchCache.app` |
 | `AppIcon.iconset/` | App icon |

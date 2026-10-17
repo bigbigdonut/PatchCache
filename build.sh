@@ -1,15 +1,15 @@
 #!/bin/bash
-# Builds "PatchCache.app" from main.swift + "PatchCache.html" in this folder.
+# Builds "patchCache.app" from main.swift + "PatchCache.html" in this folder.
 # Run it again any time you get a new "PatchCache.html" — your data is stored separately and stays put.
 set -euo pipefail
 cd "$(dirname "$0")"
 
-APP_NAME="PatchCache"
+APP_NAME="patchCache"
 APP="build/$APP_NAME.app"
 HTML="PatchCache.html"
 
 echo ""
-echo "== PatchCache: building the Mac app =="
+echo "== patchCache: building the Mac app =="
 
 # 1. Apple's Command Line Tools (free) provide the Swift compiler.
 if ! command -v swiftc >/dev/null 2>&1 || ! swiftc --version >/dev/null 2>&1; then
@@ -46,8 +46,8 @@ cat > "$APP/Contents/Info.plist" <<'PLIST'
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-  <key>CFBundleName</key><string>PatchCache</string>
-  <key>CFBundleDisplayName</key><string>PatchCache</string>
+  <key>CFBundleName</key><string>patchCache</string>
+  <key>CFBundleDisplayName</key><string>patchCache</string>
   <key>CFBundleIdentifier</key><string>local.jdub.patchcache</string>
   <key>CFBundleExecutable</key><string>PatchCache</string>
   <key>CFBundleIconFile</key><string>AppIcon</string>

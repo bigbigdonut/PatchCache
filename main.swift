@@ -5,8 +5,10 @@
 
 import Cocoa
 import WebKit
+import UniformTypeIdentifiers
 
 let storageKey = "patchbayTracker.v1"
+let libraryKey = "manualLibraryPath"   // the folder chosen with Repo Man…
 
 // MARK: - Data file
 
@@ -66,6 +68,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate,
         let config = WKWebViewConfiguration()
         config.userContentController.add(self, name: "store")
         config.userContentController.add(self, name: "download")
+        config.userContentController.add(self, name: "manuals")
         webView = WKWebView(frame: .zero, configuration: config)
         webView.navigationDelegate = self
         webView.uiDelegate = self
@@ -74,7 +77,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate,
         window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 1500, height: 900),
                           styleMask: [.titled, .closable, .miniaturizable, .resizable],
                           backing: .buffered, defer: false)
-        window.title = "PatchCache"
+        window.title = "patchCache"
         window.minSize = NSSize(width: 900, height: 500)
         window.contentView = webView
         window.delegate = self
@@ -148,6 +151,130 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate,
                   let b64 = body["data"] as? String,
                   let data = Data(base64Encoded: b64) {
             saveToDownloads(name: name, data: data)
+        } else if message.name == "manuals",
+                  let body = message.body as? [String: Any],
+                  let op = body["op"] as? String {
+            let id = (body["id"] as? NSNumber)?.intValue ?? 0
+            switch op {
+            case "scan":   reply(id, scanLibrary())
+            case "choose": chooseLibrary(id)
+            case "open":   reply(id, openManual(body["rel"] as? String ?? ""))
+            case "import": importManual(id, folder: body["folder"] as? String ?? "", file: body["file"] as? String ?? "")
+            default:       reply(id, [:])
+            }
+        }
+    }
+
+    // MARK: Manual library (Repo Man…)
+
+    func reply(_ id: Int, _ value: [String: Any]) {
+        guard let data = try? JSONSerialization.data(withJSONObject: value, options: []),
+              let json = String(data: data, encoding: .utf8) else { return }
+        webView.evaluateJavaScript("window.pcManualReply && window.pcManualReply(\(id), \(json))", completionHandler: nil)
+    }
+
+    var libraryURL: URL? {
+        guard let p = UserDefaults.standard.string(forKey: libraryKey), !p.isEmpty else { return nil }
+        return URL(fileURLWithPath: p, isDirectory: true)
+    }
+
+    /// Lists the PDFs directly inside each brand folder: { path, folders: { "Moog": ["Moog-Grandmother-OM.pdf", …] } }
+    func scanLibrary() -> [String: Any] {
+        guard let lib = libraryURL else { return ["path": NSNull()] }
+        let fm = FileManager.default
+        var isDir: ObjCBool = false
+        guard fm.fileExists(atPath: lib.path, isDirectory: &isDir), isDir.boolValue else {
+            return ["path": lib.path, "folders": [String: [String]](), "missing": true]
+        }
+        var folders: [String: [String]] = [:]
+        let items = (try? fm.contentsOfDirectory(at: lib, includingPropertiesForKeys: [.isDirectoryKey],
+                                                 options: [.skipsHiddenFiles])) ?? []
+        for u in items where (try? u.resourceValues(forKeys: [.isDirectoryKey]))?.isDirectory == true {
+            let files = (try? fm.contentsOfDirectory(atPath: u.path)) ?? []
+            folders[u.lastPathComponent] = files.filter { !$0.hasPrefix(".") && $0.lowercased().hasSuffix(".pdf") }
+        }
+        return ["path": lib.path, "folders": folders]
+    }
+
+    func chooseLibrary(_ id: Int) {
+        let panel = NSOpenPanel()
+        panel.canChooseFiles = false
+        panel.canChooseDirectories = true
+        panel.allowsMultipleSelection = false
+        panel.canCreateDirectories = true
+        panel.message = "Choose the folder that holds your manuals (one folder per brand)."
+        panel.prompt = "Choose"
+        if let lib = libraryURL { panel.directoryURL = lib }
+        panel.beginSheetModal(for: window) { response in
+            if response == .OK, let url = panel.url {
+                UserDefaults.standard.set(url.path, forKey: libraryKey)
+            }
+            self.reply(id, self.scanLibrary())
+        }
+    }
+
+    /// A name with no slashes and not "." / ".." — keeps every file operation inside the library.
+    func isPlainName(_ s: String) -> Bool {
+        !s.isEmpty && !s.contains("/") && s != "." && s != ".."
+    }
+
+    func openManual(_ rel: String) -> [String: Any] {
+        let parts = rel.components(separatedBy: "/")
+        guard let lib = libraryURL, parts.count == 2, parts.allSatisfy(isPlainName) else {
+            return ["error": "That manual couldn’t be found."]
+        }
+        let url = lib.appendingPathComponent(parts[0], isDirectory: true).appendingPathComponent(parts[1])
+        guard FileManager.default.fileExists(atPath: url.path) else {
+            return ["error": "That manual isn’t there any more:\n\(url.path)"]
+        }
+        NSWorkspace.shared.open(url)
+        return [:]
+    }
+
+    /// Asks for a PDF, then copies it (or, if it is already in the library, renames/moves it) to Library/<folder>/<file>.
+    func importManual(_ id: Int, folder: String, file: String) {
+        guard let lib = libraryURL, isPlainName(folder), isPlainName(file) else {
+            reply(id, ["error": "Choose your manual library first."]); return
+        }
+        let fm = FileManager.default
+        // use an existing brand folder whatever its capitals; otherwise it will be created
+        let existing = ((try? fm.contentsOfDirectory(atPath: lib.path)) ?? []).first {
+            $0.compare(folder, options: .caseInsensitive) == .orderedSame
+        }
+        let folderURL = lib.appendingPathComponent(existing ?? folder, isDirectory: true)
+        let target = folderURL.appendingPathComponent(file)
+
+        let panel = NSOpenPanel()
+        panel.canChooseFiles = true
+        panel.canChooseDirectories = false
+        panel.allowsMultipleSelection = false
+        panel.allowedContentTypes = [.pdf]
+        panel.message = "Choose the owner’s manual PDF. It will be saved as \(existing ?? folder)/\(file)"
+        panel.prompt = "Import"
+        panel.directoryURL = existing != nil ? folderURL : lib
+        panel.beginSheetModal(for: window) { response in
+            guard response == .OK, let src = panel.url else { self.reply(id, [:]); return }
+            let srcPath = src.standardizedFileURL.resolvingSymlinksInPath().path
+            let libPath = lib.standardizedFileURL.resolvingSymlinksInPath().path
+            var result: [String: Any] = [:]
+            if srcPath.lowercased() == target.standardizedFileURL.resolvingSymlinksInPath().path.lowercased()
+                || fm.fileExists(atPath: target.path) {
+                result["done"] = true                     // already in place; nothing is overwritten
+            } else {
+                do {
+                    try fm.createDirectory(at: folderURL, withIntermediateDirectories: true)
+                    if srcPath.hasPrefix(libPath + "/") {
+                        try fm.moveItem(at: src, to: target)  // already in the library: rename it in place
+                    } else {
+                        try fm.copyItem(at: src, to: target)  // from elsewhere: copy, original left alone
+                    }
+                    result["done"] = true
+                } catch {
+                    result["error"] = "Couldn’t add the manual.\n\(error.localizedDescription)"
+                }
+            }
+            result["library"] = self.scanLibrary()
+            self.reply(id, result)
         }
     }
 
@@ -169,6 +296,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate,
             alert.informativeText = error.localizedDescription
             alert.beginSheetModal(for: window, completionHandler: nil)
         }
+    }
+
+    func windowDidBecomeKey(_ notification: Notification) {
+        webView?.evaluateJavaScript("window.pcRescan && window.pcRescan()", completionHandler: nil)
     }
 
     // MARK: Navigation
@@ -277,19 +408,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate,
 
         let appItem = NSMenuItem()
         let appMenu = NSMenu()
-        appMenu.addItem(withTitle: "About PatchCache",
+        appMenu.addItem(withTitle: "About patchCache",
                         action: #selector(NSApplication.orderFrontStandardAboutPanel(_:)), keyEquivalent: "")
         appMenu.addItem(.separator())
         let dataItem = appMenu.addItem(withTitle: "Show Data File in Finder",
                                        action: #selector(showDataFolder(_:)), keyEquivalent: "")
         dataItem.target = self
         appMenu.addItem(.separator())
-        appMenu.addItem(withTitle: "Hide PatchCache", action: #selector(NSApplication.hide(_:)), keyEquivalent: "h")
+        appMenu.addItem(withTitle: "Hide patchCache", action: #selector(NSApplication.hide(_:)), keyEquivalent: "h")
         let hideOthers = appMenu.addItem(withTitle: "Hide Others",
                                          action: #selector(NSApplication.hideOtherApplications(_:)), keyEquivalent: "h")
         hideOthers.keyEquivalentModifierMask = [.command, .option]
         appMenu.addItem(.separator())
-        appMenu.addItem(withTitle: "Quit PatchCache", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
+        appMenu.addItem(withTitle: "Quit patchCache", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
         appItem.submenu = appMenu
         main.addItem(appItem)
 
