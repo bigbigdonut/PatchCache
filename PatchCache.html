@@ -1,0 +1,1788 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PatchCache</title>
+<style>
+:root{
+  --chrome:#12161d; --chrome-2:#1a2029; --chrome-3:#232b37; --line:#2c3644;
+  --text:#e7ebf0; --dim:#8d98a8; --accent:#6fd3f5;
+  --bp:#11355e; --ink:#eef0f2;
+  --m-normal:#ffe14a; --m-half:#ff4fd8; --m-thru:#eef0f2;
+  --narrow: ui-monospace, "SF Mono", Menlo, Monaco, Consolas, monospace;
+  --mono: ui-monospace, "SF Mono", Menlo, Monaco, Consolas, monospace;
+  --sans: ui-monospace, "SF Mono", Menlo, Monaco, Consolas, monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--chrome);color:var(--text);font:13px/1.35 var(--sans)}
+button,input,select{font:inherit;color:inherit}
+#app{display:flex;height:100vh}
+
+.btn{background:var(--chrome-3);border:1px solid var(--line);border-radius:6px;padding:5px 10px;cursor:pointer;white-space:nowrap}
+.btn:hover{border-color:#41516a}
+.btn.icon{padding:3px 9px;font-size:16px;line-height:1}
+.btn.primary{background:#1f5f80;border-color:#2b7aa3}
+
+/* Main */
+main{flex:1;display:flex;flex-direction:column;min-width:0;min-height:0}
+#detailHead{display:flex;align-items:center;gap:14px;padding:10px 16px;border-bottom:1px solid var(--line);background:var(--chrome);flex-wrap:wrap}
+.titles{flex:1;min-width:260px}
+#pbTitle{font-size:19px;font-weight:600;background:transparent;border:1px solid transparent;border-radius:6px;padding:2px 8px;margin-left:-9px;
+  cursor:pointer;display:inline-flex;align-items:center;gap:8px;max-width:100%}
+#pbTitle:hover,#pbTitle[aria-expanded="true"]{border-color:var(--line);background:var(--chrome-2)}
+#pbTitle .nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#pbTitle .caret{font-size:11px;color:var(--dim)}
+#pbName{display:none;font-size:19px;font-weight:600;background:var(--chrome-2);border:1px solid var(--accent);border-radius:6px;padding:2px 8px;margin-left:-9px;width:min(420px,100%)}
+#pbName:focus{outline:none}
+.titles.renaming #pbTitle{display:none}
+.titlerow{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+#verBtn{font:600 15px var(--sans);color:#cfe3f5;background:var(--chrome-2);border:1px solid var(--line);border-radius:6px;padding:3px 10px;cursor:pointer;display:inline-flex;align-items:center;gap:7px}
+#verBtn:hover,#verBtn[aria-expanded="true"]{border-color:#41516a}
+#verBtn .caret{font-size:10px;color:var(--dim)}
+#verBtn .dirty{display:none;color:#ffc759;font-size:11px;font-weight:600}
+#verBtn.is-dirty .dirty{display:inline}
+.titles.renaming #verBtn{display:none}
+/* Patch-point table */
+.ptwrap{position:absolute}
+.ptpair{display:flex;justify-content:space-between;align-items:flex-start}
+.ptable{border:1px solid #eef0f2;background:rgba(9,30,56,.55);font:11px var(--mono);color:var(--ink)}
+.ptwrap > .phead{margin-top:-1px;border:1px solid #eef0f2;background:rgba(9,30,56,.55);font:11px var(--mono)}
+.phead{display:flex;align-items:center;justify-content:space-between;padding:3px 8px;border-top:1px solid rgba(238,240,242,.55)}
+.phead span{font-size:8.5px;letter-spacing:.06em;color:rgba(238,240,242,.6);font-weight:600}
+.phead .btn{font:10px var(--sans);padding:2px 8px;border-radius:5px}
+.phead #ptCtl{display:flex;gap:5px;margin-left:auto;margin-right:6px;visibility:visible !important}
+.phead select.btn{padding:2px 22px 2px 8px;background-position:right 7px center}
+.ptable table{border-collapse:collapse;width:100%}
+.ptable th{font-size:10.5px;letter-spacing:.06em;color:rgba(238,240,242,.6);text-align:left;font-weight:600;padding:4px 8px;border-bottom:1px solid rgba(238,240,242,.3)}
+.ptable td{padding:2px 8px;height:18px;border-bottom:1px solid rgba(238,240,242,.08);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ptable table{table-layout:fixed}
+.ptable th:nth-child(1),.ptable th:nth-child(4){width:40px}
+.ptable th:nth-child(5){width:128px}
+.ptable td.n{color:rgba(238,240,242,.6);width:34px}
+.ptable td.e{color:rgba(238,240,242,.35)}
+.ptable td.ed{padding:0 2px}
+.tin{width:100%;height:18px;background:transparent;border:1px solid transparent;border-radius:2px;color:var(--ink);font:11px var(--mono);padding:0 5px}
+.tin::placeholder{color:rgba(238,240,242,.35)}
+.tin:hover{border-color:rgba(238,240,242,.2)}
+.tin:focus{outline:none;border-color:var(--accent);background:rgba(0,0,0,.25)}
+.tsel{height:18px;background-color:transparent;background-position:right 4px center;border:1px solid transparent;border-radius:2px;font:11px var(--mono);padding:0 18px 0 4px;cursor:pointer;box-shadow:none}
+.tsel:hover{border-color:rgba(238,240,242,.2)}
+.tsel:focus{outline:none;border-color:var(--accent)}
+.tsel option{background:#1a2029;color:var(--text)}
+.titles.renaming #pbName{display:inline-block}
+#pbMeta{color:var(--dim);font-size:11.5px;margin-top:1px}
+.ctl{display:flex;align-items:center;gap:6px}
+.ctl label{color:var(--dim);font-size:11.5px}
+/* Flat dropdowns: drop the native macOS glossy/3D look, draw a plain arrow instead */
+select,select.btn{-webkit-appearance:none;-moz-appearance:none;appearance:none;background-repeat:no-repeat;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%238d98a8' stroke-width='1.5'/%3E%3C/svg%3E")}
+select.btn{padding:5px 28px 5px 10px;background-color:var(--chrome-3);background-position:right 10px center;box-shadow:none}
+input[type=range]{width:110px;accent-color:var(--accent)}
+#scroller{flex:1;overflow:auto;background:var(--bp);min-height:0}
+#board{position:relative;margin:20px}
+#board svg{position:absolute;inset:0;display:block}
+
+/* Labels on the drawing */
+.lbl{position:absolute;height:22px;padding:0 3px;text-align:center;font:500 10.5px var(--narrow);font-stretch:condensed;color:#0d1b2a;
+  background:#eef3f8;border:1px solid #9fb6cc;border-radius:3px}
+.lbl::placeholder{color:#5c6876;font-style:italic;opacity:1}
+.lbl:not(.filled){background:#aab4bf;border-color:#8a96a3}
+/* The suggestions arrow takes room inside the box; show it only while editing (box is widened then) */
+.lbl:not(:focus)::-webkit-calendar-picker-indicator{display:none !important}
+.lbl:not(:focus)::-webkit-list-button{display:none !important}
+.lbl:focus{outline:2px solid var(--accent);outline-offset:0;background:#fff;z-index:2}
+.lbl.filled{background:var(--bg,#fffbe9);border-color:var(--bd,#d8c88e);color:var(--fg,#0d1b2a)}
+.lbl.inrun{display:none}
+.lbl.inrun.open{display:block}
+.mlbl{position:absolute;height:22px;padding:0 6px;font:500 10.5px var(--narrow);font-stretch:condensed;color:var(--fg,#0d1b2a);background:var(--bg,#fffbe9);border:1px solid var(--bd,#d8c88e);border-radius:3px;
+  display:flex;align-items:center;justify-content:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:text}
+.mlbl:hover{filter:brightness(.97)}
+/* Gear list */
+#gearWrap{margin:28px 0 48px;font:11px var(--mono);color:var(--ink)}
+#gearWrap .gbox{border:1px solid #eef0f2;background:rgba(9,30,56,.55)}
+#gearWrap .ghead{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:8px 10px;border-bottom:1px solid rgba(238,240,242,.55)}
+#gearWrap .ghead.gfoot{border-bottom:0;border-top:1px solid rgba(238,240,242,.55);padding:3px 8px;gap:5px}
+#gearWrap .ghead .ttl{font-size:8.5px;letter-spacing:.06em;color:rgba(238,240,242,.6);font-weight:600}
+#gearWrap .ghead .sp{flex:1}
+#gearWrap .btn{font:10px var(--sans);padding:2px 8px;border-radius:5px}
+#gearWrap .gcats{display:flex;flex-wrap:wrap;gap:8px 14px;padding:8px 10px;border-bottom:1px solid rgba(238,240,242,.3)}
+#gearWrap .gcats .lab{font-size:9.5px;letter-spacing:.06em;color:rgba(238,240,242,.6);font-weight:600;align-self:center}
+#gearWrap .gcat-item{display:flex;align-items:center;gap:6px}
+#gearWrap .chip{display:inline-block;padding:1px 7px;border-radius:3px;border:1px solid var(--bd,#d8c88e);background:var(--bg,#fffbe9);color:var(--fg,#0d1b2a);white-space:nowrap}
+#gearWrap select.gcat{height:20px;font:11px var(--mono);color:var(--text);background-color:var(--chrome-3);border:1px solid var(--line);border-radius:4px;padding:0 20px 0 6px;background-position:right 6px center;cursor:pointer}
+#gearWrap .gscroll{overflow:auto;max-height:340px}
+#gearWrap thead th{position:sticky;top:0;background:#0f2a4a;z-index:1}
+#gearWrap .gcatbox{margin-bottom:28px;border:0;background:none}
+/* category colors in an even grid: every chip/dropdown pair the same width, rows lined up */
+#gearWrap .gcatbox .gcats{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px 24px;border-bottom:0;padding:0}
+#gearWrap .gcatbox .gcat-item{gap:8px}
+#gearWrap .gcatbox .chip{min-width:104px;text-align:center;box-sizing:border-box}
+#gearWrap .gcatbox select.gcat{width:118px}
+#gearWrap .gcell{width:100%;min-width:0;height:20px;background:transparent;border:1px solid transparent;border-radius:2px;color:var(--ink);font:11px var(--mono);padding:0 5px}
+#gearWrap .gcell:hover{border-color:rgba(238,240,242,.2)}
+#gearWrap .gcell:focus{outline:none;border-color:var(--accent);background:rgba(0,0,0,.25)}
+#gearWrap .gcell.cat{background:var(--bg,transparent);color:var(--fg,var(--ink));border-color:var(--bd,transparent)}
+#gearWrap .gcell.cat:focus{background:rgba(0,0,0,.25);color:var(--ink);border-color:var(--accent)}
+#gearWrap td.cellw{padding:0 2px}
+#gearWrap .urlw{display:flex;align-items:center;gap:4px}
+#gearWrap .open{color:var(--accent);text-decoration:none;font-size:12px;padding:0 3px;border-radius:3px}
+#gearWrap .open:hover{background:rgba(255,255,255,.08)}
+#gearWrap .gnick::placeholder{font-style:italic;color:var(--ink);opacity:.45}
+#gearWrap td.rown{color:rgba(238,240,242,.5);text-align:right;padding-right:10px;width:1%}
+#gearWrap .lnk{background:none;border:0;cursor:pointer;font-size:11px;padding:0 3px;border-radius:3px;opacity:.35;filter:grayscale(1)}
+#gearWrap .lnk.on{opacity:.8;filter:none}
+#gearWrap .lnk:hover{opacity:1;background:rgba(255,255,255,.08)}
+#gearWrap .gcell.linked{color:#9fd8ff;text-decoration:underline;text-decoration-color:rgba(159,216,255,.4);text-underline-offset:2px}
+#gearWrap .del{background:none;border:0;color:rgba(238,240,242,.4);cursor:pointer;font-size:14px;padding:0 6px;border-radius:3px}
+#gearWrap .del:hover{color:#ff8f8f;background:rgba(255,255,255,.06)}
+#gearDialog{width:560px}
+#gearDialog textarea{width:100%;height:110px;background:var(--chrome);color:var(--text);border:1px solid var(--line);border-radius:6px;font:11px var(--mono);padding:6px 8px;resize:vertical}
+#gearWrap table{border-collapse:collapse;width:100%}
+#gearWrap th.sortable{cursor:pointer;user-select:none}
+#gearWrap th.sortable:hover{color:var(--ink)}
+#gearWrap th .arr{color:var(--accent);margin-left:4px}
+#gearWrap th{font-size:10.5px;letter-spacing:.06em;color:rgba(238,240,242,.6);text-align:left;font-weight:600;padding:5px 8px;border-bottom:1px solid rgba(238,240,242,.3);white-space:nowrap;text-transform:uppercase}
+#gearWrap td{padding:2px 8px;height:20px;border-bottom:1px solid rgba(238,240,242,.08);white-space:nowrap;max-width:220px;overflow:hidden;text-overflow:ellipsis}
+#gearWrap td.ed{padding:0 2px;min-width:150px}
+#gearWrap .empty{padding:18px 10px;color:rgba(238,240,242,.65)}
+#gearWrap .gmsg:empty{display:none}
+#gearWrap .gmsg{padding:6px 10px;color:#9be7a8}
+.mlbl:focus{outline:2px solid var(--accent);outline-offset:0}
+.mlbl.open{display:none}
+.mode{position:absolute;width:30px;height:18px;border-radius:4px;background:var(--bp);border:1px solid currentColor;
+  font:700 10px var(--mono);cursor:pointer;padding:0;display:flex;align-items:center;justify-content:center}
+.mode.rear{border-style:dashed}
+.mode:hover{background:#1b4677}
+.mode:focus-visible{outline:2px solid #fff;outline-offset:1px}
+.mode.normal{color:var(--m-normal)} .mode.halfNormal{color:var(--m-half)} .mode.thru{color:var(--m-thru)}
+
+/* Popovers */
+.pop{position:fixed;z-index:50;background:var(--chrome-2);border:1px solid #3a4658;border-radius:10px;box-shadow:0 12px 32px #0009;padding:12px;width:320px}
+.pop h3{margin:0 0 2px;font-size:13.5px}
+.pop .sub{color:var(--dim);font-size:11.5px;margin-bottom:8px}
+.opt{display:flex;gap:10px;align-items:flex-start;width:100%;text-align:left;background:none;border:0;border-radius:7px;padding:7px 6px;cursor:pointer}
+.opt:hover:not(:disabled){background:var(--chrome-3)}
+.opt:disabled{opacity:.45;cursor:not-allowed}
+.opt .tag{flex:none;width:32px;height:20px;border-radius:4px;background:var(--bp);font:700 10.5px var(--mono);display:flex;align-items:center;justify-content:center}
+.opt .t{font-weight:500}
+.opt .d{color:var(--dim);font-size:11.5px}
+.opt .chk{margin-left:auto;color:var(--accent);font-weight:700}
+.opt.cur .t{font-weight:700}
+.menu{position:fixed;z-index:50;background:var(--chrome-2);border:1px solid #3a4658;border-radius:8px;box-shadow:0 12px 32px #0009;padding:4px;min-width:180px}
+.menu button{display:block;width:100%;text-align:left;background:none;border:0;border-radius:5px;padding:6px 10px;cursor:pointer}
+.menu button:hover:not(:disabled){background:#24425f}
+.menu button:disabled{opacity:.4;cursor:default}
+.menu hr{border:0;border-top:1px solid var(--line);margin:4px 2px}
+.menu .danger{color:#ff8f8f}
+.menu .mh{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--dim);font-weight:600;padding:6px 10px 2px}
+.menu .mnote{color:var(--dim);font-size:11px;padding:4px 10px 6px;max-width:240px}
+.menu button .ck{display:inline-block;width:16px;color:var(--accent)}
+.menu button small{color:var(--dim);margin-left:6px}
+
+dialog{background:var(--chrome-2);color:var(--text);border:1px solid #3a4658;border-radius:12px;padding:18px;width:440px;max-width:92vw}
+dialog::backdrop{background:#0008}
+dialog h2{margin:0 0 4px;font-size:16px}
+dialog p{color:var(--dim);font-size:12px;margin:0 0 10px}
+.field{width:100%;background:var(--chrome);border:1px solid var(--line);border-radius:6px;padding:6px 8px}
+.field:focus{outline:none;border-color:var(--accent)}
+#sugList{list-style:none;margin:10px 0;padding:0;max-height:260px;overflow:auto;border:1px solid var(--line);border-radius:6px}
+#sugList li{display:flex;align-items:center;justify-content:space-between;padding:5px 10px;border-bottom:1px solid #ffffff0a}
+#sugList li:last-child{border-bottom:0}
+#sugList .x{background:none;border:0;color:var(--dim);cursor:pointer;font-size:15px;border-radius:4px;padding:0 6px}
+#sugList .x:hover{color:#ff8f8f;background:#ffffff10}
+#sugList .empty{color:var(--dim);justify-content:center}
+.drow{display:flex;gap:8px;align-items:center;margin-top:8px}
+.drow .spacer{flex:1}
+
+#impDialog{width:560px}
+.istep{border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin-top:10px}
+.ihead{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--dim);font-weight:600;margin-bottom:6px}
+.iopt{display:flex;gap:8px;align-items:flex-start;padding:5px 2px;cursor:pointer}
+.iopt input{margin-top:3px;accent-color:var(--accent)}
+#impDialog .d{color:var(--dim);font-size:11.5px}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+#impResult,#gearResult{margin-top:10px;font-size:12px}
+#gearResult .ok{color:#9be7a8} #gearResult .err{color:#ff9d8f}
+#impResult:empty{display:none}
+#impResult .ok{color:#9be7a8}
+#impResult .err{color:#ff9d8f}
+#impResult ul{margin:4px 0 0;padding-left:18px;color:var(--dim);max-height:110px;overflow:auto}
+#toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:#2a3340;border:1px solid #3a4658;padding:8px 14px;border-radius:8px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:60}
+#toast.show{opacity:1}
+#storageWarn{display:none;background:#5a2a1e;color:#ffd9cf;padding:6px 16px;font-size:12px}
+#storageWarn.show{display:block}
+</style>
+</head>
+<body>
+<div id="app">
+  <main>
+    <div id="storageWarn">This browser is blocking storage, so changes won’t be kept after closing. Use Back Up to save a file.</div>
+    <div id="detailHead">
+      <div class="titles">
+        <div class="titlerow">
+          <button id="pbTitle" aria-haspopup="menu" aria-expanded="false" title="Switch, add or manage patchbays"><span class="nm"></span><span class="caret">▼</span></button>
+          <input id="pbName" spellcheck="false" aria-label="Patchbay name">
+          <button id="verBtn" aria-haspopup="menu" aria-expanded="false" title="Versions: update, save new, duplicate or delete"><span class="vt"></span><span class="dirty" title="Unsaved edits — use Update or Save as New Version">● unsaved</span><span class="caret">▼</span></button>
+        </div>
+        <div id="pbMeta"></div>
+      </div>
+      <div class="ctl" id="ptCtl">
+        <select class="btn" id="setAll" title="Set every channel on this patchbay to one routing type"></select>
+        <button class="btn" id="clearAll" title="Erase every label on this patchbay (routing types stay)">Clear All</button>
+        <button class="btn" id="impBtn" title="Import patch points from a CSV file (e.g. one saved with Export CSV)">Import…</button>
+      </div>
+      <div class="ctl">
+        <button class="btn" id="halfBtn" title="Cycle the view: Fit (whole panel) → jacks 1–12 → jacks 13–24">View: Fit</button>
+      </div>
+    </div>
+    <div id="scroller"><div id="board"></div><div id="gearWrap"></div></div>
+    <input type="file" id="gearFile" accept=".csv,.tsv,.txt,text/csv" hidden>
+  </main>
+</div>
+
+<datalist id="labelList"></datalist>
+<input type="file" id="importFile" accept=".json,application/json" hidden>
+
+<dialog id="sugDialog">
+  <h2>Label Suggestions</h2>
+  <p>Labels you type are saved here and offered in every label box. Removing one here doesn’t change any patchbay.</p>
+  <input class="field" id="sugFilter" placeholder="Filter">
+  <ul id="sugList"></ul>
+  <div class="drow">
+    <input class="field" id="sugNew" placeholder="Add a label">
+    <button class="btn" id="sugAdd">Add</button>
+  </div>
+  <div class="drow">
+    <button class="btn" id="sugCollect" title="Collect every label currently on any patchbay">Add All Labels in Use</button>
+    <span class="spacer"></span>
+    <span id="sugCount" style="color:var(--dim);font-size:11.5px"></span>
+    <button class="btn primary" id="sugDone">Done</button>
+  </div>
+</dialog>
+
+<dialog id="impDialog">
+  <h2>Import into “<span id="impName"></span>”</h2>
+  <p>Reads a CSV in the same layout as <b>Export CSV</b>: <b>Ch · TOP · BOTTOM · Ch · MODE</b>. Columns are found by their headings; a “—” counts as an empty box.</p>
+  <div class="istep">
+    <div class="ihead">1 · If this patchbay already has labels</div>
+    <label class="iopt"><input type="radio" name="impHow" value="replace">
+      <span><b>Replace everything</b><br><span class="d">Labels and routing types match the sheet exactly. Empty cells clear the box.</span></span></label>
+    <label class="iopt"><input type="radio" name="impHow" value="fill">
+      <span><b>Fill blanks only</b><br><span class="d">Only empty label boxes are filled. Labels already here and routing types stay as they are.</span></span></label>
+  </div>
+  <div class="istep">
+    <div class="ihead">2 · Import from</div>
+    <div class="drow">
+      <button class="btn" id="impFileBtn" disabled>Choose CSV File…</button>
+      <span class="d">For example a file saved with this patchbay’s Export CSV.</span>
+    </div>
+    <input type="file" id="impFile" accept=".csv,.tsv,.txt,text/csv,text/tab-separated-values" hidden>
+  </div>
+  <div id="impResult"></div>
+  <div class="drow"><span class="spacer"></span><button class="btn primary" id="impDone">Done</button></div>
+</dialog>
+
+<dialog id="gearDialog">
+  <h2>Import gear list</h2>
+  <p>Reads a CSV in the same layout as the gear list’s <b>Export CSV</b> (or rows pasted from any spreadsheet). Columns are matched by their headings in any order; a “Name” column is required.</p>
+  <div class="istep">
+    <div class="ihead">1 · What to do with the gear already here</div>
+    <label class="iopt"><input type="radio" name="gearHow" value="replace">
+      <span><b>Replace the list</b><br><span class="d">The list is replaced by the file. Nicknames and manual links in the file are used; for gear the file leaves them blank on, the ones already here are kept. Category colors are kept.</span></span></label>
+    <label class="iopt"><input type="radio" name="gearHow" value="add">
+      <span><b>Keep my edits, add new gear only</b><br><span class="d">Gear already here stays as you edited it; only gear not already in the list (by Name + Brand) is added. New columns are added too.</span></span></label>
+  </div>
+  <div class="istep">
+    <div class="ihead">2 · Import from</div>
+    <div class="drow"><button class="btn" id="gearFileBtn" disabled>Choose CSV File…</button>
+      <span class="d">For example a file saved with the gear list’s Export CSV.</span></div>
+    <div class="ihead" style="margin-top:12px">or paste rows copied from a spreadsheet (include the header row)</div>
+    <textarea id="gearPaste" spellcheck="false" placeholder="#	Name	Brand	Category	…"></textarea>
+    <div class="drow"><span class="spacer"></span><button class="btn" id="gearPasteBtn" disabled>Import Pasted Rows</button></div>
+  </div>
+  <div id="gearResult"></div>
+  <div class="drow"><span class="spacer"></span><button class="btn primary" id="gearDone">Done</button></div>
+</dialog>
+
+<div id="ctlHome" hidden></div>
+<div id="toast"></div>
+
+<script>
+"use strict";
+
+/* ---------- Hardware definitions (from the manufacturers' user guides) ----------
+   The drawing keeps each unit's features (rack ears, 24 jack pairs, routing
+   control) but not its exact proportions: columns are spread across the panel
+   to give the label boxes as much room as possible.                            */
+const PANEL_H = 44.45, HOLE_YS = [6.35, 38.1];   // vertical positions in mm × zoom
+const COL_MM = 16.6, EAR_MM = 7, PAD_MM = 2;      // column pitch, ear width, ear-to-jack gap (× zoom)
+
+const MODELS = {
+  samsonSPatchPlus: {
+    name: "Samson S-Patch Plus",
+    modes: ["normal", "halfNormal", "thru"],
+    front: true,
+    finish: "rgba(41,92,158,0.55)",
+    modeCtrl: "Front 3-way mini toggle per channel",
+    unsupported: null,
+    geo: { topY: 12.5, modeY: 22.2, botY: 32.0, jackR: 5.6, holeR: 3.3 }
+  },
+  artP48: {
+    name: "ART P48",
+    modes: ["normal", "halfNormal"],
+    front: false,
+    finish: "rgba(8,18,33,0.78)",
+    modeCtrl: "Rear pushbutton per channel",
+    unsupported: "The P48 has no Thru setting — its rear pushbutton selects Normal or Half Normal only.",
+    geo: { topY: 12.5, modeY: 22.2, botY: 32.0, jackR: 5.6, holeR: 3.3 }
+  }
+};
+const MODEL_ORDER = ["samsonSPatchPlus", "artP48"];
+const CHANNELS = 24;
+
+const MODES = {
+  normal:     { title: "Normal",      short: "N",  color: "#ffe14a",
+                summary: "Rear top feeds rear bottom. A plug in either front jack breaks the normal." },
+  halfNormal: { title: "Half Normal", short: "HN", color: "#ff4fd8",
+                summary: "Top front jack taps without breaking. Bottom front jack breaks the normal." },
+  thru:       { title: "Thru",        short: "T",  color: "#eef0f2",
+                summary: "No normal. Each rear jack connects straight to its front jack." }
+};
+const MODE_ORDER = ["normal", "halfNormal", "thru"];
+const DEFAULT_MODE = "halfNormal";
+
+/* ---------- State & persistence ---------- */
+const STORE_KEY = "patchbayTracker.v1";
+let state;
+let saveTimer = null;
+
+const uid = () => (crypto.randomUUID ? crypto.randomUUID() : "id-" + Date.now().toString(36) + Math.random().toString(36).slice(2));
+
+const blankChannels = () => Array.from({ length: CHANNELS }, (_, i) => ({ id: i + 1, top: "", bottom: "", mode: DEFAULT_MODE }));
+const copyChannels = chs => chs.map(c => ({ id: c.id, top: c.top, bottom: c.bottom, mode: c.mode }));
+function todayISO() { const d = new Date(), z = n => String(n).padStart(2, "0"); return `${d.getFullYear()}-${z(d.getMonth() + 1)}-${z(d.getDate())}`; }
+function fmtDate(iso) { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || ""); return m ? `${m[2]}/${m[3]}/${m[1]}` : ""; }
+function newVersion(n, channels) { return { id: uid(), n, date: todayISO(), channels: copyChannels(channels) }; }
+
+/* Each patchbay has saved versions plus a working copy (pb.channels) that you edit.
+   "Update" writes the working copy into the current version; "Save as New Version" adds one. */
+function newPatchbay(name, model) {
+  const channels = blankChannels();
+  const v = newVersion(1, channels);
+  return { id: uid(), name, model, channels, versions: [v], versionId: v.id };
+}
+const curVersion = pb => pb.versions.find(v => v.id === pb.versionId) || pb.versions[pb.versions.length - 1];
+function isDirty(pb) {
+  const v = curVersion(pb);
+  return pb.channels.some((c, i) => { const o = v.channels[i]; return c.top !== o.top || c.bottom !== o.bottom || c.mode !== o.mode; });
+}
+
+function normChannels(model, arr) {
+  const out = blankChannels();
+  if (Array.isArray(arr)) {
+    for (const c of arr) {
+      const i = Number(c && c.id) - 1;
+      if (!(i >= 0 && i < CHANNELS)) continue;
+      out[i].top = typeof c.top === "string" ? c.top : "";
+      out[i].bottom = typeof c.bottom === "string" ? c.bottom : "";
+      out[i].mode = model.modes.includes(c.mode) ? c.mode : DEFAULT_MODE;
+    }
+  }
+  return out;
+}
+
+function seed() {
+  const a = newPatchbay("Samson S-Patch Plus", "samsonSPatchPlus");
+  const b = newPatchbay("ART P48", "artP48");
+  return { version: 1, patchbays: [a, b], selectedId: a.id, labels: [], scale: 4.0 };
+}
+
+function normGear(g) {
+  if (!g || !Array.isArray(g.cols) || !Array.isArray(g.rows)) return { cols: [], rows: [], catColors: {} };
+  const cols = g.cols.map(c => String(c));
+  let rows = g.rows.filter(r => r && Array.isArray(r.cells))
+    .map(r => ({ cells: cols.map((_, i) => String(r.cells[i] == null ? "" : r.cells[i])), nick: typeof r.nick === "string" ? r.nick : "",
+                 url: typeof r.url === "string" ? r.url : "" }));
+  absorbUrlColumn(cols, rows);
+  const hiN = cols.findIndex(c => /^#$|^no\.?$|^number$/i.test(String(c).trim()));
+  if (hiN >= 0) rows.forEach((r, i) => { r.cells[hiN] = String(i + 1); });
+  const catColors = {};
+  if (g.catColors && typeof g.catColors === "object")
+    for (const [k, v] of Object.entries(g.catColors)) if (Number.isInteger(v) && v >= 0 && v < 6) catColors[k] = v;
+  return { cols, rows, catColors };
+}
+
+/* A "Manual URL" column (from a CSV) is folded into each row's link, so the Manual name itself becomes clickable. */
+function absorbNickColumn(cols, rows) {
+  const ni = cols.findIndex(c => /^nick\s*names?(\(s\))?$/i.test(String(c).trim()));
+  if (ni < 0) return;
+  for (const r of rows) { const v = (r.cells[ni] || "").trim(); if (v && !r.nick) r.nick = v; r.cells.splice(ni, 1); }
+  cols.splice(ni, 1);
+}
+function absorbUrlColumn(cols, rows) {
+  const ui = cols.findIndex(c => /^manual\s*url$/i.test(String(c).trim()));
+  if (ui < 0) return;
+  for (const r of rows) { const u = (r.cells[ui] || "").trim(); if (u && !r.url) r.url = u; r.cells.splice(ui, 1); }
+  cols.splice(ui, 1);
+}
+
+/** Accepts saved or imported data and returns a clean, complete state (or null). */
+function normalize(raw) {
+  if (!raw || typeof raw !== "object" || !Array.isArray(raw.patchbays)) return null;
+  const pbs = [];
+  for (const p of raw.patchbays) {
+    if (!p || !MODELS[p.model]) continue;
+    const model = MODELS[p.model];
+    const fresh = newPatchbay(typeof p.name === "string" && p.name.trim() ? p.name : model.name, p.model);
+    if (typeof p.id === "string") fresh.id = p.id;
+    if (Array.isArray(p.unlinked)) fresh.unlinked = p.unlinked.filter(x => typeof x === "string");
+    fresh.channels = normChannels(model, p.channels);
+    const vs = Array.isArray(p.versions) ? p.versions.filter(v => v && Number(v.n) >= 1) : [];
+    if (vs.length) {
+      fresh.versions = vs.map(v => ({
+        id: typeof v.id === "string" ? v.id : uid(),
+        n: Math.floor(Number(v.n)),
+        date: /^\d{4}-\d{2}-\d{2}$/.test(v.date) ? v.date : todayISO(),
+        channels: normChannels(model, v.channels)
+      }));
+      fresh.versionId = fresh.versions.some(v => v.id === p.versionId) ? p.versionId : fresh.versions[fresh.versions.length - 1].id;
+    } else {
+      // Data from before versions existed: what you had becomes v1.
+      fresh.versions = [newVersion(1, fresh.channels)];
+      fresh.versionId = fresh.versions[0].id;
+    }
+    pbs.push(fresh);
+  }
+  const labels = Array.isArray(raw.labels) ? [...new Set(raw.labels.filter(l => typeof l === "string" && l.trim()).map(l => l.trim()))] : [];
+  sortLabels(labels);
+  const scale = Number(raw.scale);
+  return {
+    version: 1,
+    patchbays: pbs,
+    selectedId: pbs.some(p => p.id === raw.selectedId) ? raw.selectedId : (pbs[0] ? pbs[0].id : null),
+    labels,
+    scale: scale >= 2.4 && scale <= 11 ? scale : 4.0,
+    autoPair: raw.autoPair !== false,
+    gear: normGear(raw.gear)
+  };
+}
+
+let storageOK = true;
+function load() {
+  let raw = null;
+  try { raw = localStorage.getItem(STORE_KEY); }
+  catch (e) { storageOK = false; }
+  if (raw) {
+    try {
+      const parsed = normalize(JSON.parse(raw));
+      if (parsed) return parsed;
+    } catch (e) { /* fall through */ }
+    // Keep unreadable data instead of overwriting it.
+    try { localStorage.setItem(STORE_KEY + ".unreadable." + Date.now(), raw); } catch (e) {}
+  }
+  return seed();
+}
+
+function saveNow() {
+  clearTimeout(saveTimer); saveTimer = null;
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); storageOK = true; }
+  catch (e) { storageOK = false; }
+  document.getElementById("storageWarn").classList.toggle("show", !storageOK);
+}
+function save() { clearTimeout(saveTimer); saveTimer = setTimeout(saveNow, 250); renderVersion(); renderTable(); }
+window.addEventListener("beforeunload", () => { if (saveTimer) saveNow(); });
+document.addEventListener("visibilitychange", () => { if (document.hidden && saveTimer) saveNow(); });
+
+/* ---------- Helpers ---------- */
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const current = () => state.patchbays.find(p => p.id === state.selectedId) || null;
+function sortLabels(arr) { arr.sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: "base" })); }
+function toast(msg) { const t = $("toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove("show"), 1800); }
+
+function uniqueName(base) {
+  const names = new Set(state.patchbays.map(p => p.name));
+  if (!names.has(base)) return base;
+  let n = 2; while (names.has(`${base} ${n}`)) n++;
+  return `${base} ${n}`;
+}
+
+function rememberLabel(raw) {
+  const l = (raw || "").trim();
+  if (!l) return;
+  if (state.labels.some(x => x.toLowerCase() === l.toLowerCase())) return;
+  state.labels.push(l); sortLabels(state.labels);
+  renderDatalist(); save();
+}
+
+/* ---------- Patchbay menu (the title is the dropdown) ---------- */
+function renderTitle() {
+  const pb = current();
+  $("pbTitle").querySelector(".nm").textContent = pb ? pb.name : "No patchbay";
+}
+
+function startRename() {
+  const pb = current(); if (!pb) return;
+  $("pbName").value = pb.name;
+  $("pbName").closest(".titles").classList.add("renaming");
+  $("pbName").focus(); $("pbName").select();
+}
+
+$("pbTitle").addEventListener("click", e => {
+  e.stopPropagation();
+  if (openPop && openPop.dataset.owner === "title") { closePop(); return; }
+  const pb = current();
+  const i = pb ? state.patchbays.indexOf(pb) : -1;
+  const items = [{ heading: "Patchbays" }];
+  for (const p of state.patchbays) {
+    items.push({ label: p.name, sub: MODELS[p.model].name, checked: p.id === state.selectedId,
+      run: () => { if (p.id !== state.selectedId) { state.selectedId = p.id; save(); renderAll(); } } });
+  }
+  items.push({ sep: true });
+  for (const m of MODEL_ORDER) items.push({ label: "Add " + MODELS[m].name,
+    run: () => { const p = newPatchbay(uniqueName(MODELS[m].name), m); state.patchbays.push(p); state.selectedId = p.id; save(); renderAll(); } });
+  if (pb) {
+    items.push({ sep: true }, { heading: "This patchbay" },
+      { label: "Rename…", run: startRename },
+      { label: "Duplicate", run: () => {
+          const copy = JSON.parse(JSON.stringify(pb));
+          copy.id = uid(); copy.name = uniqueName(copy.name + " copy");
+          state.patchbays.splice(i + 1, 0, copy); state.selectedId = copy.id; save(); renderAll();
+        } },
+      { label: "Move Up in List", disabled: i === 0, run: () => { state.patchbays.splice(i, 1); state.patchbays.splice(i - 1, 0, pb); save(); } },
+      { label: "Move Down in List", disabled: i === state.patchbays.length - 1, run: () => { state.patchbays.splice(i, 1); state.patchbays.splice(i + 1, 0, pb); save(); } },
+      { label: "Delete…", danger: true, run: () => {
+          if (!confirm(`Delete “${pb.name}”?\n\nIts labels and routing settings will be removed. Saved label suggestions are kept.`)) return;
+          state.patchbays.splice(i, 1);
+          state.selectedId = state.patchbays.length ? state.patchbays[Math.min(i, state.patchbays.length - 1)].id : null;
+          save(); renderAll();
+        } });
+  }
+  items.push({ sep: true },
+    { label: "Back Up…", run: doBackup },
+    { label: "Restore…", run: () => $("importFile").click() },
+    { note: "Saves automatically in this browser. Back up now and then." });
+  showMenu($("pbTitle"), items, "left", "title");
+  $("pbTitle").setAttribute("aria-expanded", "true");
+});
+
+/* ---------- Versions ---------- */
+function renderVersion() {
+  const pb = current(), btn = $("verBtn");
+  if (!pb) { btn.style.visibility = "hidden"; return; }
+  btn.style.visibility = "visible";
+  const v = curVersion(pb);
+  btn.querySelector(".vt").textContent = `v${v.n} - ${fmtDate(v.date)}`;
+  btn.classList.toggle("is-dirty", isDirty(pb));
+}
+
+function loadVersion(pb, v) {
+  pb.versionId = v.id;
+  pb.channels = copyChannels(v.channels);
+  save(); renderBoard();
+}
+const discardOK = pb => !isDirty(pb) || confirm(`Discard your unsaved edits to v${curVersion(pb).n}?`);
+
+$("verBtn").addEventListener("click", e => {
+  e.stopPropagation();
+  if (openPop && openPop.dataset.owner === "ver") { closePop(); return; }
+  const pb = current(); if (!pb) return;
+  const v = curVersion(pb), dirty = isDirty(pb);
+  const next = Math.max(...pb.versions.map(x => x.n)) + 1;
+  const items = [{ heading: "Versions" }];
+  for (const x of [...pb.versions].sort((a, b) => b.n - a.n)) {
+    items.push({ label: `v${x.n}`, sub: fmtDate(x.date) + (x.id === v.id && dirty ? " · unsaved edits" : ""), checked: x.id === v.id,
+      run: () => {
+        if (x.id === v.id) { if (dirty && confirm(`Discard your unsaved edits and go back to saved v${x.n}?`)) loadVersion(pb, x); return; }
+        if (discardOK(pb)) loadVersion(pb, x);
+      } });
+  }
+  items.push({ sep: true },
+    { label: `Update v${v.n}`, disabled: !dirty, run: () => {
+        v.channels = copyChannels(pb.channels); v.date = todayISO(); save(); toast(`v${v.n} updated`);
+      } },
+    { label: `Save as New Version (v${next})`, disabled: !dirty, run: () => {
+        const nv = newVersion(next, pb.channels); pb.versions.push(nv); pb.versionId = nv.id; save(); toast(`Saved as v${next}`);
+      } },
+    { label: `Duplicate v${v.n} as v${next}`, run: () => {
+        if (!discardOK(pb)) return;
+        const nv = newVersion(next, v.channels); pb.versions.push(nv); loadVersion(pb, nv); toast(`v${v.n} duplicated as v${next}`);
+      } },
+    { label: `Delete v${v.n}…`, danger: true, disabled: pb.versions.length < 2, run: () => {
+        if (!confirm(`Delete v${v.n} (${fmtDate(v.date)})?${dirty ? "\nYour unsaved edits will be lost too." : ""}`)) return;
+        pb.versions = pb.versions.filter(x => x.id !== v.id);
+        const latest = pb.versions.reduce((a, b) => (b.n > a.n ? b : a));
+        loadVersion(pb, latest); toast(`v${v.n} deleted`);
+      } },
+    { note: "Edits stay unsaved until you choose Update or Save as New Version. They’re kept if you close the page." });
+  showMenu($("verBtn"), items, "left", "ver");
+  $("verBtn").setAttribute("aria-expanded", "true");
+});
+
+/* ---------- Generic menu & popover ---------- */
+let openPop = null;
+function closePop() { if (openPop) { openPop.remove(); openPop = null; } $("pbTitle").setAttribute("aria-expanded", "false"); $("verBtn").setAttribute("aria-expanded", "false"); }
+function placePop(el, anchor, align = "center") {
+  const r = anchor.getBoundingClientRect();
+  document.body.appendChild(el);
+  const w = el.offsetWidth, h = el.offsetHeight;
+  const want = align === "left" ? r.left : r.left + r.width / 2 - w / 2;
+  let left = Math.min(Math.max(8, want), window.innerWidth - w - 8);
+  let top = r.bottom + 6;
+  if (top + h > window.innerHeight - 8) top = Math.max(8, r.top - h - 6);
+  el.style.left = left + "px"; el.style.top = top + "px";
+  openPop = el;
+}
+function showMenu(anchor, items, align = "center", owner = "") {
+  closePop();
+  const m = document.createElement("div");
+  m.className = "menu";
+  m.dataset.owner = owner;
+  const hasChecks = items.some(it => "checked" in it);
+  for (const it of items) {
+    if (it.sep) { m.appendChild(document.createElement("hr")); continue; }
+    if (it.heading || it.note) {
+      const d = document.createElement("div");
+      d.className = it.heading ? "mh" : "mnote"; d.textContent = it.heading || it.note;
+      m.appendChild(d); continue;
+    }
+    const b = document.createElement("button");
+    if (hasChecks && "checked" in it) {
+      const ck = document.createElement("span"); ck.className = "ck"; ck.textContent = it.checked ? "✓" : "";
+      b.appendChild(ck);
+    }
+    b.appendChild(document.createTextNode(it.label));
+    if (it.sub) { const sm = document.createElement("small"); sm.textContent = it.sub; b.appendChild(sm); }
+    b.disabled = !!it.disabled;
+    if (it.danger) b.className = "danger";
+    b.addEventListener("click", () => { closePop(); it.run(); });
+    m.appendChild(b);
+  }
+  placePop(m, anchor, align);
+}
+document.addEventListener("mousedown", e => {
+  if (!openPop || openPop.contains(e.target)) return;
+  if (openPop.dataset.owner === "title" && $("pbTitle").contains(e.target)) return;   // title click toggles
+  if (openPop.dataset.owner === "ver" && $("verBtn").contains(e.target)) return;
+  closePop();
+});
+document.addEventListener("keydown", e => { if (e.key === "Escape") closePop(); });
+window.addEventListener("resize", closePop);
+$("scroller").addEventListener("scroll", closePop);
+
+function openModePicker(ch, anchor) {
+  closePop();
+  const pb = current(); if (!pb) return;
+  const model = MODELS[pb.model];
+  const chan = pb.channels[ch - 1];
+  const pop = document.createElement("div");
+  pop.className = "pop";
+  pop.innerHTML = `<h3>Jacks ${ch} / ${ch + CHANNELS}</h3><div class="sub">${esc(model.modeCtrl)}</div>` +
+    MODE_ORDER.map(k => {
+      const ok = model.modes.includes(k), M = MODES[k], cur = chan.mode === k;
+      return `<button class="opt${cur ? " cur" : ""}" data-mode="${k}" ${ok ? "" : "disabled"}>
+        <span class="tag" style="color:${M.color};border:1px ${model.front ? "solid" : "dashed"} ${M.color}">${M.short}</span>
+        <span><span class="t">${M.title}</span><br><span class="d">${esc(ok ? M.summary : model.unsupported)}</span></span>
+        ${cur ? '<span class="chk">✓</span>' : ""}
+      </button>`;
+    }).join("");
+  pop.addEventListener("click", e => {
+    const b = e.target.closest("[data-mode]");
+    if (!b || b.disabled) return;
+    chan.mode = b.dataset.mode; save(); closePop(); renderBoard();
+    const again = document.querySelector(`.mode[data-ch="${ch}"]`); if (again) again.focus();
+  });
+  placePop(pop, anchor);
+  const first = pop.querySelector(".opt.cur") || pop.querySelector(".opt:not(:disabled)");
+  if (first) first.focus();
+}
+
+/* ---------- Header ---------- */
+function renderHeader() {
+  const pb = current();
+  const has = !!pb;
+  renderTitle();
+  for (const el of document.querySelectorAll("#detailHead .ctl, #pbMeta")) el.style.visibility = has ? "visible" : "hidden";
+  if (!has) return;
+  const model = MODELS[pb.model];
+  renderTitle();
+  $("pbMeta").textContent = `${model.name} · 24 channels / 48 points`;
+  $("setAll").innerHTML = `<option value="">Set All…</option>` + model.modes.map(k => `<option value="${k}">All ${MODES[k].title}</option>`).join("");
+}
+$("pbName").addEventListener("input", e => {
+  const pb = current(); if (!pb) return;
+  pb.name = e.target.value; save();
+  renderTitle();
+  renderTitleText();
+});
+$("pbName").addEventListener("blur", e => {
+  const pb = current(); if (!pb) return;
+  if (!pb.name.trim()) { pb.name = MODELS[pb.model].name; save(); renderTitle(); renderTitleText(); }
+  e.target.closest(".titles").classList.remove("renaming");
+});
+$("pbName").addEventListener("keydown", e => { if (e.key === "Enter" || e.key === "Escape") e.target.blur(); });
+$("setAll").addEventListener("change", e => {
+  const pb = current(), mode = e.target.value; e.target.value = "";
+  if (!pb || !mode) return;
+  if (!confirm(`Set all 24 channels on “${pb.name}” to ${MODES[mode].title}?`)) return;
+  pb.channels.forEach(c => c.mode = mode); save(); renderBoard();
+});
+$("clearAll").addEventListener("click", () => {
+  const pb = current(); if (!pb) return;
+  if (!pb.channels.some(c => c.top || c.bottom)) { toast("No labels to clear"); return; }
+  if (!confirm(`Erase all 48 labels on “${pb.name}”?\n\nRouting types stay. Until you Update or save a new version, you can get the labels back by reselecting v${curVersion(pb).n} in the version menu.`)) return;
+  pb.channels.forEach(c => { c.top = ""; c.bottom = ""; });
+  save(); renderBoard(); toast("Labels cleared");
+});
+function fitScale(columns) {
+  const usable = $("scroller").clientWidth - 40 - 32;   // board margin + side margins
+  const fit = usable / (columns * COL_MM + (columns === CHANNELS ? 2 : 1) * (EAR_MM + PAD_MM));
+  return Math.max(2.4, Math.floor(fit * 20) / 20);
+}
+
+/* View button: whole panel (fit to window) → jacks 1–12 → jacks 13–24 → whole panel.
+   After moving the Zoom slider it reads "Custom", and the next click fits the whole panel again. */
+let halfView = "custom";
+function setHalfView(v) {
+  halfView = v;
+  $("halfBtn").textContent = { all: "View: Fit", left: "View: 1–12", right: "View: 13–24", custom: "View: Fit" }[v];
+}
+$("halfBtn").addEventListener("click", () => {
+  const next = { all: "left", left: "right", right: "all", custom: "all" }[halfView];
+  setHalfView(next);
+  state.scale = next === "all" ? Math.min(5.5, fitScale(CHANNELS)) : Math.min(11, fitScale(CHANNELS / 2));
+  save(); renderHeader(); renderBoard();
+  const sc = $("scroller");
+  sc.scrollLeft = next === "right" ? sc.scrollWidth - sc.clientWidth : 0;
+});
+
+/* ---------- Blueprint board ---------- */
+function layoutFor(pb) {
+  const g = MODELS[pb.model].geo, s = state.scale;
+  // Label text grows with zoom: 9.5 px at the normal fit, larger when zoomed in.
+  // Condensed label text: 10.5 px at the normal fit, larger when zoomed in.
+  const fs = Math.max(11.5, Math.round(2.5 * s * 2) / 2), lh = Math.max(24, Math.round(fs * 1.8));
+  const k = Math.max(9.5, Math.round(1.75 * s * 2) / 2) / 9.5;   // routing buttons/key scale as before
+  const L = { s, g, marginX: 16, fs, lh, k };
+  L.topLabelY = 11 + lh / 2;
+  L.panelTop = L.topLabelY + lh / 2 + 19;
+  L.pitch = COL_MM * s; L.ear = EAR_MM * s; L.pad = PAD_MM * s;
+  L.panelW = 2 * (L.ear + L.pad) + CHANNELS * L.pitch; L.panelH = PANEL_H * s;
+  L.panelLeft = L.marginX; L.panelRight = L.marginX + L.panelW;
+  L.panelBottom = L.panelTop + L.panelH;
+  L.botLabelY = L.panelBottom + 19 + lh / 2;
+  L.titleTop = L.botLabelY + lh / 2 + 19;
+  L.totalW = Math.max(L.marginX * 2 + L.panelW, 1000);
+  L.tableTop = L.titleTop;
+  L.tableH = 24 + (CHANNELS / 2) * 19 + 2 + 36;       // header + 12 rows + footer
+  L.totalH = L.tableTop + L.tableH + 2;
+  L.y = mm => L.panelTop + mm * s;
+  L.jackX = c => L.panelLeft + L.ear + L.pad + (c - 0.5) * L.pitch;
+  L.labelW = L.pitch - 3;
+  return L;
+}
+
+const LEAD = "#9ec9f0";   // leader lines: brighter light blue
+const INK = "#eef0f2", DIM = "rgba(238,240,242,.55)", BP = "#11355e";
+const t = (x, y, str, size, fill = INK, anchor = "middle", weight = 400, extra = "") =>
+  `<text x="${x}" y="${y}" font-size="${size}" fill="${fill}" text-anchor="${anchor}" dominant-baseline="central" font-weight="${weight}" ${extra}>${esc(str)}</text>`;
+
+function linkLine(cx, y1, y2, mode, w = 1.6) {
+  const c = MODES[mode].color;
+  if (mode === "normal") return `<line x1="${cx}" y1="${y1}" x2="${cx}" y2="${y2}" stroke="${c}" stroke-width="${w}"/>`;
+  if (mode === "halfNormal") return `<line x1="${cx}" y1="${y1}" x2="${cx}" y2="${y2}" stroke="${c}" stroke-width="${w}" stroke-dasharray="3 2"/>`;
+  return "";
+}
+
+function svgFor(pb, L) {
+  const model = MODELS[pb.model], g = L.g, s = L.s;
+  const o = [];
+  o.push(`<svg xmlns="http://www.w3.org/2000/svg" width="${L.totalW}" height="${L.totalH}" font-family='ui-monospace, "SF Mono", Menlo, Monaco, Consolas, monospace'>`);
+  o.push(`<defs>
+    <pattern id="gMin" width="12" height="12" patternUnits="userSpaceOnUse"><path d="M12 0H0V12" fill="none" stroke="rgba(255,255,255,.05)" stroke-width=".5"/></pattern>
+    <pattern id="gMaj" width="60" height="60" patternUnits="userSpaceOnUse"><rect width="60" height="60" fill="url(#gMin)"/><path d="M60 0H0V60" fill="none" stroke="rgba(255,255,255,.11)" stroke-width=".5"/></pattern>
+  </defs>`);
+  o.push(`<rect width="100%" height="100%" fill="url(#gMaj)"/>`);
+
+  // Panel
+  o.push(`<rect x="${L.panelLeft}" y="${L.panelTop}" width="${L.panelW}" height="${L.panelH}" fill="${model.finish}" stroke="${INK}" stroke-width="1.4"/>`);
+  for (const ex of [L.panelLeft + L.ear, L.panelRight - L.ear])
+    o.push(`<line x1="${ex}" y1="${L.panelTop}" x2="${ex}" y2="${L.panelBottom}" stroke="${DIM}" stroke-width=".8" stroke-dasharray="5 3"/>`);
+  for (const hx of [L.panelLeft + L.ear / 2, L.panelRight - L.ear / 2])
+    for (const hy of HOLE_YS) {
+      const w = L.ear * 0.62, h = L.ear * 0.44;
+      o.push(`<rect x="${hx - w / 2}" y="${L.y(hy) - h / 2}" width="${w}" height="${h}" rx="${h / 2}" fill="none" stroke="${INK}"/>`);
+    }
+
+  // Jacks, numbers, normalling lines
+  const ns = Math.max(8.5, 2.9 * s);
+  for (const c of pb.channels) {
+    const cx = L.jackX(c.id), ty = L.y(g.topY), by = L.y(g.botY);
+    o.push(linkLine(cx, ty + g.jackR * s, by - g.jackR * s, c.mode));
+    [[ty, c.id, -1, "top"], [by, c.id + CHANNELS, 1, "bottom"]].forEach(([cy, num, dir, row]) => {
+      o.push(`<circle class="ring" data-ring="${row}-${c.id}" cx="${cx}" cy="${cy}" r="${g.jackR * s}" fill="rgba(17,53,94,.35)" stroke="${INK}"/>`);
+      o.push(`<circle cx="${cx}" cy="${cy}" r="${g.holeR * s}" fill="rgba(0,0,0,.55)" stroke="${DIM}" stroke-width=".7"/>`);
+      // centered between the jack's outer ring and the panel edge
+      const ny = dir < 0 ? (L.panelTop + cy - g.jackR * s) / 2 : (cy + g.jackR * s + L.panelBottom) / 2;
+      o.push(t(cx, ny, num, ns, INK, "middle", 500));
+    });
+    // Leaders to the label boxes
+    o.push(`<line x1="${cx}" y1="${L.topLabelY + L.lh / 2 + 1}" x2="${cx}" y2="${L.panelTop}" stroke="${LEAD}" stroke-width="${Math.max(1, L.k)}" stroke-dasharray="${3 * L.k} ${2 * L.k}"/>`);
+    o.push(`<line x1="${cx}" y1="${L.panelBottom}" x2="${cx}" y2="${L.botLabelY - L.lh / 2 - 1}" stroke="${LEAD}" stroke-width="${Math.max(1, L.k)}" stroke-dasharray="${3 * L.k} ${2 * L.k}"/>`);
+  }
+
+  const l = L.panelLeft, r = Math.max(L.panelRight, L.totalW - L.marginX);
+
+  o.push(`</svg>`);
+  return o.join("");
+}
+
+function renderTitleText() {
+  const pb = current(), el = document.getElementById("titleName");
+  if (pb && el) el.textContent = pb.name.toUpperCase();
+}
+
+function renderBoard() {
+  const board = $("board");
+  // These controls live in the Patch Points footer; park them before the board is rebuilt so they survive.
+  if (board.contains($("ptCtl"))) $("ctlHome").appendChild($("ptCtl"));
+  const pb = current();
+  if (!pb) {
+    board.style.width = "auto"; board.style.height = "auto";
+    board.innerHTML = `<div style="padding:40px;color:#cfd8e3">No patchbay yet — click the title above to add one.</div>`;
+    return;
+  }
+  const model = MODELS[pb.model];
+  const L = layoutFor(pb);
+  board.style.width = L.totalW + "px";
+  board.style.height = L.totalH + "px";
+
+  const parts = [svgFor(pb, L)];
+  const lw = L.labelW;
+  for (const row of ["top", "bottom"]) {
+    const cy = row === "top" ? L.topLabelY : L.botLabelY;
+    const runOf = labelRuns(pb, row);
+    for (const c of pb.channels) {
+      const num = row === "top" ? c.id : c.id + CHANNELS;
+      const val = c[row];
+      const run = runOf[c.id];
+      if (run && run.from === c.id) {
+        // One wide box across matching neighbours, e.g. a stereo pair.
+        const n1 = row === "top" ? run.from : run.from + CHANNELS, n2 = row === "top" ? run.to : run.to + CHANNELS;
+        const span = L.jackX(run.to) - L.jackX(run.from) + lw, cx = (L.jackX(run.from) + L.jackX(run.to)) / 2;
+        const width = hugWidth(run.text, false, L.fs, span, 18, L.jackX(run.to) - L.jackX(run.from) + 24);
+        parts.push(`<div class="mlbl" tabindex="0" data-row="${row}" data-from="${run.from}" data-to="${run.to}" data-cx="${cx}" data-maxw="${span}" data-label="${esc(pb.channels[run.from - 1][row])}"
+          title="${esc(run.text)} — jacks ${n1}–${n2} (click to edit either jack · right-click to unlink)" style="left:${cx - width / 2}px;top:${cy - L.lh / 2}px;width:${width}px;height:${L.lh}px;font-size:${L.fs}px">${esc(run.text)}</div>`);
+      }
+      parts.push(`<input class="lbl${val ? " filled" : ""}${run ? " inrun" : ""}" list="labelList" autocomplete="off" spellcheck="false"
+        data-ch="${c.id}" data-row="${row}" data-num="${num}" data-cx="${L.jackX(c.id)}" data-maxw="${lw}" placeholder="∅" value="${esc(val)}" title="${esc(val || "Jack " + num + " (empty)")}"
+        aria-label="Label for jack ${num}" style="left:${L.jackX(c.id) - hugWidth(val, true, L.fs, lw) / 2}px;top:${cy - L.lh / 2}px;width:${hugWidth(val, true, L.fs, lw)}px;height:${L.lh}px;font-size:${L.fs}px">`);
+    }
+  }
+  for (const c of pb.channels) {
+    parts.push(`<button class="mode ${c.mode}${model.front ? "" : " rear"}" data-ch="${c.id}"
+      title="Jacks ${c.id} / ${c.id + CHANNELS}: ${MODES[c.mode].title} — click to change"
+      style="left:${L.jackX(c.id) - 15 * L.k}px;top:${L.y(L.g.modeY) - 9 * L.k}px;width:${30 * L.k}px;height:${18 * L.k}px;font-size:${10 * L.k}px;border-radius:${4 * L.k}px">${MODES[c.mode].short}</button>`);
+  }
+  // Two tables, each lined up under its half of the panel (1–12 and 13–24).
+  const half = CHANNELS / 2, gap = 20;
+  const leftX = L.jackX(1) - lw / 2, rightX = L.jackX(CHANNELS) + lw / 2;
+  const mid = (L.jackX(half) + L.jackX(half + 1)) / 2;
+  const head = `<thead><tr><th>CH</th><th>TOP</th><th>BOTTOM</th><th>CH</th><th>MODE</th></tr></thead>`;
+  parts.push(`<div class="ptwrap" id="ptable" style="left:${leftX}px;top:${L.tableTop}px;width:${rightX - leftX}px">
+    <div class="ptpair">
+      <div class="ptable" style="width:${mid - gap / 2 - leftX}px"><table>${head}<tbody data-from="1"></tbody></table></div>
+      <div class="ptable" style="width:${rightX - (mid + gap / 2)}px"><table>${head}<tbody data-from="${half + 1}"></tbody></table></div>
+    </div>
+    <div class="phead"><span>PATCH POINTS</span><button class="btn" id="csvBtn" title="Download this patchbay as a CSV in your sheet layout">Export CSV</button></div></div>`);
+  board.innerHTML = parts.join("");
+  const csv = $("csvBtn"); if (csv) csv.parentNode.insertBefore($("ptCtl"), csv);
+  applyLabelColors();
+  board.querySelectorAll(".lbl, .mlbl").forEach(fitCheck);
+  lastGearBox = { left: leftX, width: rightX - leftX };
+  positionGear();
+  renderTable();
+}
+
+/* Labels that merge into one box:
+   - identical neighbours ("EXTC", "EXTC")
+   - numbered neighbours counting up by one, with a space or "ch." before the number
+     ("RME 5", "RME 6" → "RME 5–6"; "ART ch.46", "ART ch.47" → "ART ch.46–47") — "SM57/SM58" won't match
+   - an L next to an R with the same name ("Phoenix L", "Phoenix R" → "Phoenix L/R")
+   Numbered and L/R pairing can be switched off; any merged box can be unlinked. */
+const NUM_RE = /^(.*?(?:\s|ch\.))(\d+)$/i;
+const LR_RE = /^(.*?)[\s\-_]*\(?\b(L|Left|R|Right)\)?$/i;
+const runKey = (row, from, labels) => `${row}|${from}|${labels.join("\u0001")}`;
+
+/* Boxes hug their text, but never grow past their column (or merged pair), so nothing overlaps. */
+let measureEl = null;
+function textWidth(str, italic, fs) {
+  if (!measureEl) {
+    measureEl = document.createElement("span");
+    measureEl.style.cssText = "position:absolute;left:-9999px;top:0;visibility:hidden;white-space:pre;font-family:var(--narrow);font-weight:500;font-stretch:condensed";
+    document.body.appendChild(measureEl);
+  }
+  measureEl.style.fontSize = fs + "px";
+  measureEl.style.fontStyle = italic ? "italic" : "normal";
+  measureEl.textContent = str;
+  return measureEl.getBoundingClientRect().width;
+}
+/* minW keeps a merged box wide enough to reach the leader line of every jack it covers. */
+function hugWidth(val, isInput, fs, maxW, pad = 14, minW = 0) {
+  const v = (val || "").trim();
+  const extra = v ? pad : pad + 10;                                // empty "∅" boxes a little roomier
+  const w = Math.ceil(textWidth(v || "∅", !v, fs)) + extra + 2;   // text + side padding + border
+  return Math.min(maxW, Math.max(w, 30, minW));
+}
+function sizeBox(el) {
+  if (el.dataset.w) return;                                       // being edited: stays widened
+  const fs = parseFloat(el.style.fontSize), maxW = +el.dataset.maxw, cx = +el.dataset.cx;
+  const w = hugWidth(el.value, true, fs, maxW);
+  el.style.width = w + "px"; el.style.left = (cx - w / 2) + "px";
+  fitCheck(el);
+}
+/* Safety net: if the browser still clips the text (fonts render a little differently per Mac/browser),
+   widen the box by exactly the overflow, never past its column. */
+function fitCheck(el) {
+  if (el.dataset.w || !el.offsetParent) return;                    // being edited, or hidden
+  const maxW = +el.dataset.maxw, cx = +el.dataset.cx;
+  for (let i = 0; i < 3; i++) {
+    const over = el.scrollWidth - el.clientWidth;
+    const w = parseFloat(el.style.width);
+    if (over <= 0.5 || w >= maxW) return;
+    const nw = Math.min(maxW, w + over + 6);
+    el.style.width = nw + "px"; el.style.left = (cx - nw / 2) + "px";
+  }
+}
+
+/** Maps channel → {from, to, text, key} for each merged group in a row. */
+function labelRuns(pb, row, ignoreUnlinked = false) {
+  const out = {}, chs = pb.channels, unlinked = new Set(ignoreUnlinked ? [] : (pb.unlinked || []));
+  const lab = i => chs[i][row].trim();
+  let i = 0;
+  while (i < CHANNELS) {
+    const a = lab(i);
+    let j = i, text = null;
+    if (a) {
+      while (j + 1 < CHANNELS && lab(j + 1) === a) j++;
+      if (j > i) text = a;
+      else if (state.autoPair !== false) {
+        const m = NUM_RE.exec(a);
+        if (m) {
+          let n = +m[2];
+          for (;;) {
+            const m2 = j + 1 < CHANNELS ? NUM_RE.exec(lab(j + 1)) : null;
+            if (m2 && m2[1].toLowerCase() === m[1].toLowerCase() && +m2[2] === n + 1) { j++; n++; } else break;
+          }
+          if (j > i) text = `${m[1]}${m[2]} – ${n}`;
+        }
+        if (!text && i + 1 < CHANNELS) {
+          const l = LR_RE.exec(a), r = LR_RE.exec(lab(i + 1));
+          if (l && r && /^l/i.test(l[2]) && /^r/i.test(r[2]) && l[1].trim() && l[1].trim().toLowerCase() === r[1].trim().toLowerCase()) {
+            j = i + 1; text = `${l[1].trim()} L / R`;
+          }
+        }
+      }
+    }
+    if (text) {
+      const key = runKey(row, i + 1, chs.slice(i, j + 1).map(c => c[row].trim()));
+      if (!unlinked.has(key)) for (let k = i; k <= j; k++) out[k + 1] = { from: i + 1, to: j + 1, text, key };
+    }
+    i = j + 1;
+  }
+  return out;
+}
+
+/* Clicking a merged box opens its individual boxes; they merge again when you leave them. */
+function openRun(m) {
+  m.classList.add("open");
+  const { row, from, to } = m.dataset;
+  for (let ch = +from; ch <= +to; ch++) {
+    const el = document.querySelector(`.lbl[data-row="${row}"][data-ch="${ch}"]`);
+    if (el) { el.classList.add("open"); fitCheck(el); }
+  }
+}
+function focusLabel(row, ch, selectAll = true) {
+  const el = document.querySelector(`.lbl[data-row="${row}"][data-ch="${ch}"]`);
+  if (!el) return false;
+  if (el.classList.contains("inrun") && !el.classList.contains("open")) {
+    const m = [...document.querySelectorAll(`.mlbl[data-row="${row}"]`)].find(x => ch >= +x.dataset.from && ch <= +x.dataset.to);
+    if (m) openRun(m);
+  }
+  el.focus(); if (selectAll) el.select();
+  return true;
+}
+function rerenderKeepingFocus() {
+  const a = document.activeElement;
+  const cls = a && a.classList ? ["lbl", "tin", "tsel"].find(c => a.classList.contains(c)) : null;
+  const keep = cls ? { cls, row: a.dataset.row, ch: +a.dataset.ch, s: a.selectionStart, e: a.selectionEnd } : null;
+  renderBoard();
+  if (!keep) return;
+  let ok = false;
+  if (keep.cls === "lbl") ok = focusLabel(keep.row, keep.ch, false);
+  else {
+    const el = document.querySelector(`.${keep.cls}[data-ch="${keep.ch}"]${keep.row ? `[data-row="${keep.row}"]` : ""}`);
+    if (el) { el.focus(); ok = true; }
+  }
+  if (ok && keep.cls !== "tsel") { try { document.activeElement.setSelectionRange(keep.s, keep.e); } catch (err) {} }
+}
+$("board").addEventListener("mousedown", e => {
+  const m = e.target.closest(".mlbl"); if (!m) return;
+  e.preventDefault();                                   // also stops a right-click from focusing (and splitting) the box
+  if (e.button !== 0) return;                           // right-click opens the menu instead
+  const r = m.getBoundingClientRect(), from = +m.dataset.from, to = +m.dataset.to;
+  const ch = Math.min(to, from + Math.floor((e.clientX - r.left) / r.width * (to - from + 1)));
+  focusLabel(m.dataset.row, ch);
+});
+$("board").addEventListener("focusin", e => {
+  const m = e.target.closest && e.target.closest(".mlbl");
+  if (m) focusLabel(m.dataset.row, +m.dataset.from);      // reached with Tab
+});
+$("board").addEventListener("focusout", e => {
+  if (!e.target.classList.contains("lbl")) return;
+  // Wait until focus has landed, then rebuild so matching neighbours merge (or split) again.
+  setTimeout(() => {
+    const a = document.activeElement;
+    if (a && a.classList.contains("lbl") && a.dataset.row === e.target.dataset.row && a.classList.contains("open") && e.target.classList.contains("open")) {
+      const sameRun = [...document.querySelectorAll(`.mlbl.open[data-row="${a.dataset.row}"]`)]
+        .some(m => +a.dataset.ch >= +m.dataset.from && +a.dataset.ch <= +m.dataset.to && +e.target.dataset.ch >= +m.dataset.from && +e.target.dataset.ch <= +m.dataset.to);
+      if (sameRun) return;                                   // still editing inside the same pair
+    }
+    if (document.querySelector("#impDialog[open], #sugDialog[open]")) return;
+    refreshRuns();
+  }, 0);
+});
+
+// Rebuild only when the merged groups actually changed; otherwise just close any open group.
+function runsSignature(pb) {
+  return ["top", "bottom"].map(row => {
+    const r = labelRuns(pb, row), seen = new Set();
+    return Object.values(r).filter(x => !seen.has(x.from) && seen.add(x.from)).map(x => `${x.from}-${x.to}:${x.text}`).join("|");
+  }).join("/");
+}
+function shownSignature() {
+  return ["top", "bottom"].map(row => [...document.querySelectorAll(`.mlbl[data-row="${row}"]`)]
+    .map(m => `${m.dataset.from}-${m.dataset.to}:${m.textContent.trim()}`).join("|")).join("/");
+}
+let pointerIsDown = false, pendingRefresh = false;
+document.addEventListener("pointerdown", () => { pointerIsDown = true; }, true);
+document.addEventListener("pointerup", () => {
+  pointerIsDown = false;
+  if (pendingRefresh) { pendingRefresh = false; setTimeout(refreshRuns, 0); }   // after the click lands
+}, true);
+function refreshRuns() {
+  const pb = current(); if (!pb) return;
+  if (pointerIsDown) { pendingRefresh = true; return; }   // don't swap elements under a click in progress
+  if (runsSignature(pb) !== shownSignature()) { rerenderKeepingFocus(); return; }
+  const a = document.activeElement;
+  document.querySelectorAll(".mlbl.open").forEach(m => {
+    const inside = a && a.classList && a.classList.contains("lbl") && a.dataset.row === m.dataset.row &&
+      +a.dataset.ch >= +m.dataset.from && +a.dataset.ch <= +m.dataset.to;
+    if (inside) return;
+    m.classList.remove("open");
+    for (let ch = +m.dataset.from; ch <= +m.dataset.to; ch++) {
+      const el = document.querySelector(`.lbl[data-row="${m.dataset.row}"][data-ch="${ch}"]`);
+      if (el) el.classList.remove("open");
+    }
+  });
+}
+
+$("board").addEventListener("contextmenu", e => {
+  const box = e.target.closest(".mlbl, .lbl"); if (!box) return;
+  const pb = current(); if (!pb) return;
+  e.preventDefault();
+  const row = box.dataset.row, ch = +(box.dataset.ch || box.dataset.from);
+  const items = [];
+  if (box.classList.contains("mlbl")) {
+    const run = labelRuns(pb, row)[ch];
+    items.push({ label: `Unlink “${run.text}”`, run: () => {
+      pb.unlinked = (pb.unlinked || []).concat(run.key); save(); rerenderKeepingFocus();
+    } });
+  } else {
+    const would = labelRuns(pb, row, true)[ch];
+    if (would && (pb.unlinked || []).includes(would.key)) items.push({ label: `Link again as “${would.text}”`, run: () => {
+      pb.unlinked = pb.unlinked.filter(k => k !== would.key); save(); rerenderKeepingFocus();
+    } });
+  }
+  items.push({ label: "Auto-pair numbered & L/R labels", checked: state.autoPair !== false, run: () => {
+    state.autoPair = state.autoPair === false; save(); rerenderKeepingFocus();
+    toast(`Auto-pairing ${state.autoPair ? "on" : "off"}`);
+  } });
+  showMenu(box, items, "left");
+});
+
+function renderTable() {
+  const pb = current(), body = document.querySelector("#ptable");
+  if (!pb || !body) return;
+  const model = MODELS[pb.model];
+  if (body.dataset.pb !== pb.id || body.querySelectorAll("tbody tr").length !== CHANNELS) {
+    const tin = (c, row) => `<td class="ed"><input class="tin" list="labelList" autocomplete="off" spellcheck="false" placeholder="—"
+      data-ch="${c.id}" data-row="${row}" aria-label="Label for jack ${row === "top" ? c.id : c.id + CHANNELS}"></td>`;
+    const rowHTML = c => `<tr><td class="n">${c.id}</td>${tin(c, "top")}${tin(c, "bottom")}<td class="n">${c.id + CHANNELS}</td>
+      <td class="ed"><select class="tsel" data-ch="${c.id}" aria-label="Routing for jacks ${c.id} / ${c.id + CHANNELS}">
+      ${model.modes.map(k => `<option value="${k}">${MODES[k].title}</option>`).join("")}</select></td></tr>`;
+    for (const tb of body.querySelectorAll("tbody")) {
+      const from = +tb.dataset.from;
+      tb.innerHTML = pb.channels.slice(from - 1, from - 1 + CHANNELS / 2).map(rowHTML).join("");
+    }
+    body.dataset.pb = pb.id;
+  }
+  const active = document.activeElement;
+  for (const c of pb.channels) {
+    for (const row of ["top", "bottom"]) {
+      const el = body.querySelector(`.tin[data-ch="${c.id}"][data-row="${row}"]`);
+      if (el !== active && el.value !== c[row]) el.value = c[row];
+      colorTableCell(el);
+      el.title = c[row];
+    }
+    const sel = body.querySelector(`.tsel[data-ch="${c.id}"]`);
+    if (sel.value !== c.mode) sel.value = c.mode;
+    sel.style.color = MODES[c.mode].color;
+  }
+}
+
+// Table edits flow into the patchbay boxes
+$("board").addEventListener("input", e => {
+  const el = e.target; if (!el.classList.contains("tin")) return;
+  const pb = current(); if (!pb) return;
+  pb.channels[+el.dataset.ch - 1][el.dataset.row] = el.value;
+  const box = document.querySelector(`.lbl[data-row="${el.dataset.row}"][data-ch="${el.dataset.ch}"]`);
+  if (box) { box.value = el.value; box.classList.toggle("filled", !!el.value); box.title = el.value || `Jack ${box.dataset.num} (empty)`; sizeBox(box); colorBox(box, el.value); }
+  save();
+  if (e.inputType === undefined || e.inputType === "insertReplacementText") rememberLabel(el.value);
+});
+$("board").addEventListener("change", e => {
+  const el = e.target;
+  if (el.classList.contains("tin")) rememberLabel(el.value);
+  if (el.classList.contains("tsel")) {
+    const pb = current(); if (!pb || !MODELS[pb.model].modes.includes(el.value)) return;
+    pb.channels[+el.dataset.ch - 1].mode = el.value;
+    save(); rerenderKeepingFocus();
+  }
+});
+$("board").addEventListener("focusout", e => {
+  if (e.target.classList.contains("tin")) setTimeout(refreshRuns, 0);   // merge/split boxes after a table edit
+});
+$("board").addEventListener("keydown", e => {
+  const el = e.target; if (!el.classList.contains("tin") || e.key !== "Enter") return;
+  e.preventDefault(); rememberLabel(el.value);
+  const next = document.querySelector(`.tin[data-row="${el.dataset.row}"][data-ch="${+el.dataset.ch + (e.shiftKey ? -1 : 1)}"]`);
+  if (next) { next.focus(); next.select(); } else el.blur();
+});
+
+function exportCSV() {
+  const pb = current(); if (!pb) return;
+  const v = curVersion(pb);
+  const q = x => /[",\n]/.test(x) ? `"${x.replace(/"/g, '""')}"` : x;
+  const lines = ["Ch,TOP (Rear),BOTTOM (Rear),Ch,MODE"].concat(pb.channels.map(c =>
+    [c.id, q(c.top || "—"), q(c.bottom || "—"), c.id + CHANNELS, MODES[c.mode].title].join(",")));
+  const blob = new Blob(["\uFEFF" + lines.join("\r\n") + "\r\n"], { type: "text/csv" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `${pb.name.replace(/[\\/:*?"<>|]/g, "-")} v${v.n}${isDirty(pb) ? " (unsaved edits)" : ""} ${todayISO()}.csv`;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  toast("CSV saved to Downloads");
+}
+
+// Board events (delegated)
+$("board").addEventListener("input", e => {
+  const el = e.target; if (!el.classList.contains("lbl")) return;
+  const pb = current(); if (!pb) return;
+  const c = pb.channels[Number(el.dataset.ch) - 1];
+  c[el.dataset.row] = el.value;
+  el.classList.toggle("filled", !!el.value);
+  colorBox(el, el.value);
+  el.title = el.value || `Jack ${el.dataset.num} (empty)`;
+  save();
+  // Picking an item from the suggestion list fires "input" with the full value.
+  if (e.inputType === undefined || e.inputType === "insertReplacementText") rememberLabel(el.value);
+});
+// Widen a label box while it's being edited so long labels stay readable.
+$("board").addEventListener("focusin", e => {
+  const el = e.target; if (!el.classList.contains("lbl")) return;
+  const want = Math.max(+el.dataset.maxw, 170);
+  el.dataset.w = "1";
+  el.style.width = want + "px";
+  el.style.left = (+el.dataset.cx - want / 2) + "px";
+});
+$("board").addEventListener("focusout", e => {
+  const el = e.target; if (!el.classList.contains("lbl") || !el.dataset.w) return;
+  delete el.dataset.w;
+  sizeBox(el);
+});
+$("board").addEventListener("change", e => { if (e.target.classList.contains("lbl")) rememberLabel(e.target.value); });
+$("board").addEventListener("keydown", e => {
+  const el = e.target; if (!el.classList.contains("lbl")) return;
+  if (e.key === "Enter") {
+    rememberLabel(el.value);
+    if (!focusLabel(el.dataset.row, Number(el.dataset.ch) + (e.shiftKey ? -1 : 1))) el.blur();
+    e.preventDefault();
+  }
+});
+$("board").addEventListener("click", e => {
+  if (e.target.closest("#csvBtn")) { exportCSV(); return; }
+  const b = e.target.closest(".mode"); if (!b) return;
+  e.stopPropagation(); openModePicker(Number(b.dataset.ch), b);
+});
+
+/* ---------- Suggestions ---------- */
+function renderDatalist() {
+  const pb = current();
+  const used = pb ? [...new Set(pb.channels.flatMap(c => [c.top.trim(), c.bottom.trim()]).filter(Boolean))] : [];
+  sortLabels(used);
+  $("labelList").innerHTML = used.map(l => `<option value="${esc(l)}"></option>`).join("");
+}
+// rebuild just before a label box or table cell is edited, so it always reflects what's on the patchbay now
+document.addEventListener("focusin", e => {
+  if (e.target.classList && (e.target.classList.contains("lbl") || e.target.classList.contains("tin")) && e.target.getAttribute("list") === "labelList") renderDatalist();
+});
+function renderSugList() {
+  const q = $("sugFilter").value.trim().toLowerCase();
+  const shown = q ? state.labels.filter(l => l.toLowerCase().includes(q)) : state.labels;
+  $("sugList").innerHTML = shown.length
+    ? shown.map(l => `<li><span>${esc(l)}</span><button class="x" data-del="${esc(l)}" title="Remove from suggestions">×</button></li>`).join("")
+    : `<li class="empty">${state.labels.length ? "No matches" : "No saved labels yet — type in any label box"}</li>`;
+  $("sugCount").textContent = `${state.labels.length} saved`;
+}
+
+$("sugDone").addEventListener("click", () => $("sugDialog").close());
+$("sugFilter").addEventListener("input", renderSugList);
+$("sugList").addEventListener("click", e => {
+  const b = e.target.closest("[data-del]"); if (!b) return;
+  state.labels = state.labels.filter(l => l !== b.dataset.del); save(); renderDatalist(); renderSugList();
+});
+function addNewSug() { rememberLabel($("sugNew").value); $("sugNew").value = ""; renderSugList(); }
+$("sugAdd").addEventListener("click", addNewSug);
+$("sugNew").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); addNewSug(); } });
+$("sugCollect").addEventListener("click", () => {
+  const before = state.labels.length;
+  state.patchbays.forEach(p => p.channels.forEach(c => { rememberLabel(c.top); rememberLabel(c.bottom); }));
+  renderSugList(); toast(`${state.labels.length - before} label(s) added`);
+});
+
+/* ---------- Import (CSV file) ---------- */
+function parseCSV(text) {
+  text = text.replace(/^\uFEFF/, "");
+  const first = text.split(/\r?\n/, 1)[0] || "";
+  const delim = (first.match(/\t/g) || []).length > (first.match(/,/g) || []).length ? "\t" : ",";
+  const rows = []; let row = [], cell = "", q = false;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (q) {
+      if (ch === '"') { if (text[i + 1] === '"') { cell += '"'; i++; } else q = false; }
+      else cell += ch;
+    } else if (ch === '"') q = true;
+    else if (ch === delim) { row.push(cell); cell = ""; }
+    else if (ch === "\n" || ch === "\r") {
+      if (ch === "\r" && text[i + 1] === "\n") i++;
+      row.push(cell); rows.push(row); row = []; cell = "";
+    } else cell += ch;
+  }
+  if (cell !== "" || row.length) { row.push(cell); rows.push(row); }
+  return rows;
+}
+
+const cleanCell = v => { const s = String(v == null ? "" : v).trim(); return /^[—–\-]+$/.test(s) ? "" : s; };
+
+function parseMode(v) {
+  const k = String(v || "").toLowerCase().replace(/[\s_\-.]/g, "");
+  if (["normal", "normalled", "normaled", "n", "full", "fullnormal"].includes(k)) return "normal";
+  if (["halfnormal", "halfnormalled", "halfnormaled", "halfnorm", "hn", "half"].includes(k)) return "halfNormal";
+  if (["thru", "through", "t", "denormal", "nonnormal", "nonnormalled"].includes(k)) return "thru";
+  return null;
+}
+
+/** Reads rows laid out as Ch | TOP | BOTTOM | Ch | MODE (header row optional). */
+function readPatchRows(rows) {
+  let cols = { ch: 0, top: 1, bottom: 2, mode: 4 }, start = 0;
+  for (let r = 0; r < Math.min(rows.length, 6); r++) {
+    const cells = rows[r].map(c => String(c).trim().toLowerCase());
+    const top = cells.findIndex(c => c.startsWith("top"));
+    const bottom = cells.findIndex(c => c.startsWith("bottom"));
+    if (top >= 0 && bottom >= 0) {
+      const ch = cells.findIndex(c => /^(ch|channel|#|no)/.test(c));
+      cols = { ch: ch >= 0 ? ch : 0, top, bottom, mode: cells.findIndex(c => c.startsWith("mode") || c.startsWith("routing")) };
+      start = r + 1; break;
+    }
+  }
+  const out = [];
+  for (let r = start; r < rows.length; r++) {
+    const ch = parseInt(String(rows[r][cols.ch] || "").trim(), 10);
+    if (!(ch >= 1 && ch <= CHANNELS)) continue;
+    out.push({
+      ch,
+      top: cleanCell(rows[r][cols.top]),
+      bottom: cleanCell(rows[r][cols.bottom]),
+      modeRaw: cols.mode >= 0 ? cleanCell(rows[r][cols.mode]) : ""
+    });
+  }
+  return out;
+}
+
+function importInto(pb, rows, how, sourceName) {
+  const model = MODELS[pb.model];
+  const found = readPatchRows(rows);
+  if (!found.length) {
+    return { error: `No patch points found in ${sourceName}. Expected columns Ch, TOP, BOTTOM and MODE, with channel numbers 1–24.` };
+  }
+  let labels = 0, modes = 0; const notes = [];
+  for (const f of found) {
+    const c = pb.channels[f.ch - 1];
+    for (const side of ["top", "bottom"]) {
+      const v = f[side];
+      if (how === "replace" ? c[side] !== v : (!c[side].trim() && v)) { c[side] = v; labels++; }
+      if (v) rememberLabel(v);
+    }
+    if (how === "replace" && f.modeRaw) {
+      const m = parseMode(f.modeRaw);
+      if (!m) notes.push(`Ch ${f.ch}: didn’t recognise routing type “${f.modeRaw}” — left as ${MODES[c.mode].title}`);
+      else if (!model.modes.includes(m)) notes.push(`Ch ${f.ch}: ${MODES[m].title} isn’t available on the ${model.name} — left as ${MODES[c.mode].title}`);
+      else if (c.mode !== m) { c.mode = m; modes++; }
+    }
+  }
+  save(); renderBoard();
+  return { found: found.length, labels, modes, notes, how };
+}
+
+function showImportResult(res, sourceName) {
+  const box = $("impResult");
+  if (res.error) { box.innerHTML = `<div class="err">${esc(res.error)}</div>`; return; }
+  const parts = [`${res.found} channels read`, `${res.labels} label${res.labels === 1 ? "" : "s"} updated`];
+  if (res.how === "replace") parts.push(`${res.modes} routing type${res.modes === 1 ? "" : "s"} changed`);
+  box.innerHTML = `<div class="ok">Imported from ${esc(sourceName)}: ${parts.join(" · ")}.</div>` +
+    (res.notes.length ? `<ul>${res.notes.map(n => `<li>${esc(n)}</li>`).join("")}</ul>` : "");
+  toast("Import finished");
+}
+
+const impHow = () => { const r = document.querySelector('input[name="impHow"]:checked'); return r ? r.value : null; };
+function syncImpButtons() {
+  const ready = !!impHow();
+  $("impFileBtn").disabled = !ready;
+}
+
+$("impBtn").addEventListener("click", () => {
+  const pb = current(); if (!pb) return;
+  $("impName").textContent = pb.name;
+  document.querySelectorAll('input[name="impHow"]').forEach(r => r.checked = false);
+  $("impResult").innerHTML = "";
+  syncImpButtons();
+  $("impDialog").showModal();
+});
+$("impDone").addEventListener("click", () => $("impDialog").close());
+document.querySelectorAll('input[name="impHow"]').forEach(r => r.addEventListener("change", syncImpButtons));
+
+$("impFileBtn").addEventListener("click", () => $("impFile").click());
+$("impFile").addEventListener("change", async e => {
+  const f = e.target.files[0]; e.target.value = "";
+  const pb = current(), how = impHow();
+  if (!f || !pb || !how) return;
+  let text;
+  try { text = await f.text(); } catch (err) { showImportResult({ error: "Couldn’t read that file." }); return; }
+  showImportResult(importInto(pb, parseCSV(text), how, `“${f.name}”`), `“${f.name}”`);
+});
+
+/* ---------- Gear list & category colors ---------- */
+/* Five colors, each a light fill with a darker text shade of the same hue. */
+const GEAR_COLORS = [
+  { name: "Blue",   bg: "#d6e6ff", fg: "#0f3a75", bd: "#8fb2e8", tx: "#a9c8ff" },
+  { name: "Green",  bg: "#d4f0d6", fg: "#1a5a24", bd: "#8cc794", tx: "#9fe0a8" },
+  { name: "Orange", bg: "#ffe2c6", fg: "#7a3a00", bd: "#e8a866", tx: "#ffbf80" },
+  { name: "Purple", bg: "#e8ddff", fg: "#45227a", bd: "#b39ae6", tx: "#c9b3ff" },
+  { name: "Red",    bg: "#ffd8dc", fg: "#7f1a1a", bd: "#e6959d", tx: "#ffa3ad" },
+  { name: "Teal",   bg: "#cdeff0", fg: "#0b5156", bd: "#7cc7cb", tx: "#8fe3e8" }
+];
+let lastGearBox = null, gearKeysCache = null, gearSort = { col: null, dir: 1 };
+const gearData = () => state.gear || (state.gear = { cols: [], rows: [], catColors: {} });
+const gearCol = re => gearData().cols.findIndex(c => re.test(String(c).trim()));
+function invalidateGear() { gearKeysCache = null; }
+
+/** Every nickname (comma-separated) and the gear Name, longest first, with its category. */
+function gearKeys() {
+  if (gearKeysCache) return gearKeysCache;
+  const g = gearData(), ni = gearCol(/^name$/i), ci = gearCol(/^category$/i), keys = [];
+  for (const r of g.rows) {
+    const cat = ci >= 0 ? r.cells[ci].trim() : "";
+    const names = [...r.nick.split(","), ni >= 0 ? r.cells[ni] : ""].map(x => x.trim()).filter(Boolean);
+    for (const n of names) keys.push({ k: n.toLowerCase(), cat });
+  }
+  keys.sort((a, b) => b.k.length - a.k.length);
+  return (gearKeysCache = keys);
+}
+/** A label matches gear when it starts with a nickname/name followed by nothing or a non-letter/number ("RME 5", "1073 L"). */
+function colorForLabel(label) {
+  const v = String(label || "").trim().toLowerCase();
+  if (!v) return null;
+  for (const { k, cat } of gearKeys()) {
+    if (v === k || (v.startsWith(k) && /[^a-z0-9]/i.test(v.charAt(k.length)))) {
+      const i = gearData().catColors[cat];
+      return Number.isInteger(i) ? GEAR_COLORS[i] : null;
+    }
+  }
+  return null;
+}
+function colorBox(el, label) {
+  const c = colorForLabel(label);
+  for (const [p, key] of [["--bg", "bg"], ["--fg", "fg"], ["--bd", "bd"]]) {
+    if (c) el.style.setProperty(p, c[key]); else el.style.removeProperty(p);
+  }
+  // the jack's outer ring follows its label's color (bright shade on the dark panel)
+  if (el.classList.contains("lbl")) {
+    const ring = document.querySelector(`#board .ring[data-ring="${el.dataset.row}-${el.dataset.ch}"]`);
+    if (ring) { ring.setAttribute("stroke", c ? c.tx : INK); ring.setAttribute("stroke-width", c ? 1.8 : 1); }
+  }
+}
+/* Patch Points table text uses a brighter shade of the same color, readable on the dark table. */
+function colorTableCell(el) {
+  const c = colorForLabel(el.value);
+  el.style.color = c ? c.tx : "";
+}
+function applyLabelColors() {
+  document.querySelectorAll("#ptable .tin").forEach(colorTableCell);
+  document.querySelectorAll("#board .lbl").forEach(el => colorBox(el, el.value));
+  document.querySelectorAll("#board .mlbl").forEach(m => colorBox(m, m.dataset.label));
+}
+function positionGear() {
+  const wrap = $("gearWrap");
+  if (!lastGearBox) return;
+  wrap.style.marginLeft = (20 + lastGearBox.left) + "px";
+  wrap.style.width = lastGearBox.width + "px";
+}
+
+const DEFAULT_GEAR_COLS = ["#", "Name", "Brand", "Category", "Subcategory", "Class", "Inputs", "Outputs", "Jacks", "Condition", "Manual"];
+const isURL = v => /^https?:\/\/\S+$/i.test(String(v).trim());
+const chipVars = cat => {
+  const i = gearData().catColors[String(cat).trim()];
+  const c = Number.isInteger(i) ? GEAR_COLORS[i] : null;
+  return c ? `--bg:${c.bg};--fg:${c.fg};--bd:${c.bd}` : "";
+};
+
+function renderGear() {
+  const wrap = $("gearWrap"), g = gearData();
+  positionGear();
+  wrap.innerHTML = `<div class="gbox gcatbox" id="gearCats"></div>
+    <div class="gbox"><div id="gearBody"></div>
+      <div class="ghead gfoot"><span class="ttl" id="gearCount"></span><span class="sp"></span>
+      <button class="btn" id="gearAdd" title="Add a blank row">+ Add Row</button>
+      <button class="btn" id="gearImport" title="Import your Gear List tab">Import…</button>
+      <button class="btn" id="gearExport" title="Download the gear list with nicknames">Export CSV</button></div>
+      <div class="gmsg"></div></div>`;
+  renderGearCats(); renderGearTable();
+}
+
+function renderGearCats() {
+  const g = gearData(), box = $("gearCats"), ci = gearCol(/^category$/i);
+  const cats = [...new Set(g.rows.map(r => ci >= 0 ? r.cells[ci].trim() : "").filter(Boolean))].sort((a, b) => a.localeCompare(b));
+  box.style.display = cats.length || g.rows.length ? "" : "none";
+  box.innerHTML = cats.length
+    ? `<div class="gcats">${cats.map(cat => `<span class="gcat-item"><span class="chip" style="${chipVars(cat)}">${esc(cat)}</span>
+      <select class="gcat" data-cat="${esc(cat)}" aria-label="Color for ${esc(cat)}"><option value="">Unassigned</option>
+      ${GEAR_COLORS.map((c, i) => `<option value="${i}" ${g.catColors[cat] === i ? "selected" : ""}>${c.name}</option>`).join("")}</select></span>`).join("")}</div>`
+    : "";
+}
+
+const rowNumCol = () => gearCol(/^#$|^no\.?$|^number$/i);
+function renumberGear() {
+  const g = gearData(), hi = rowNumCol();
+  if (hi >= 0) g.rows.forEach((r, i) => { r.cells[hi] = String(i + 1); });
+}
+
+/* Column order on screen (and in Export): # · Brand · Name · Nickname(s) · Category · … — stored order is untouched. */
+function gearDisplayOrder() {
+  const g = gearData();
+  const order = g.cols.map((_, j) => j);
+  const ni = gearCol(/^name$/i), bi = gearCol(/^brand$/i);
+  if (ni >= 0 && bi >= 0) { order.splice(order.indexOf(bi), 1); order.splice(order.indexOf(ni), 0, bi); }   // Brand before Name
+  const after = Math.max(order.indexOf(ni), order.indexOf(bi));
+  order.splice(after >= 0 ? after + 1 : order.length, 0, "nick");                                          // Nickname right after them
+  return order;
+}
+
+function renderGearTable() {
+  const g = gearData(), body = $("gearBody");
+  $("gearCount").textContent = `GEAR LIST${g.rows.length ? ` · ${g.rows.length} ITEMS` : ""}`;
+  $("gearExport").disabled = !g.rows.length;
+  if (!g.rows.length) {
+    body.innerHTML = `<div class="empty">No gear list yet. Use Import… (a CSV file or pasted spreadsheet rows), or + Add Row to start one here.</div>`;
+    return;
+  }
+  const ci = gearCol(/^category$/i);
+  // Click a heading to sort by it (again to reverse, a third time for the original order).
+  const srt = gearSort.col != null && gearSort.col <= g.cols.length ? gearSort : { col: null, dir: 1 };
+  const arrow = j => srt.col === j ? `<span class="arr">${srt.dir > 0 ? "▲" : "▼"}</span>` : "";
+  const disp = gearDisplayOrder(), nameAt = gearCol(/^name$/i);
+  const ths = disp.map(j => j === "nick"
+      ? `<th class="sortable" data-sort="${g.cols.length}" title="Sort by nickname">NICKNAME(S)${arrow(g.cols.length)}</th>`
+      : j === rowNumCol() ? `<th class="sortable" data-sort="orig" title="Back to the original order">${esc(g.cols[j])}</th>`
+      : `<th class="sortable" data-sort="${j}" title="Sort by ${esc(g.cols[j])}">${esc(g.cols[j])}${arrow(j)}</th>`).join("") + `<th></th>`;
+  let order = g.rows.map((_, i) => i);
+  if (srt.col != null) {
+    const val = i => (srt.col === g.cols.length ? g.rows[i].nick : g.rows[i].cells[srt.col]).trim();
+    order.sort((a, b) => {
+      const va = val(a), vb = val(b);
+      if (!va !== !vb) return va ? -1 : 1;                       // blanks always last
+      return srt.dir * va.localeCompare(vb, undefined, { numeric: true, sensitivity: "base" }) || a - b;
+    });
+  }
+  const size = v => Math.max(4, Math.min(30, String(v).length + 1));
+  const mi = gearCol(/^manual$/i);
+  const cell = (v, i, j) => {
+    const inp = `<input class="gcell${j === ci ? " cat" : ""}${j === mi && g.rows[i].url ? " linked" : ""}" data-i="${i}" data-j="${j}" value="${esc(v)}" size="${size(v) + (j === ci ? 2 : 0)}" spellcheck="false" autocomplete="off"
+      ${j === ci ? `style="${chipVars(v)}"` : ""} title="${esc(j === mi && g.rows[i].url ? g.rows[i].url : v)}">`;
+    if (j === mi) {
+      const u = g.rows[i].url;
+      return `<td class="cellw"><span class="urlw">${inp}${u ? `<a class="open" href="${esc(u)}" target="_blank" rel="noopener" title="Open manual">↗</a>` : ""}
+        <button class="lnk${u ? " on" : ""}" data-link="${i}" title="${u ? "Change or remove the manual link" : "Add a link to the manual"}">🔗</button></span></td>`;
+    }
+    return `<td class="cellw">${isURL(v) ? `<span class="urlw">${inp}<a class="open" href="${esc(v.trim())}" target="_blank" rel="noopener" title="Open link">↗</a></span>` : inp}</td>`;
+  };
+  const hiC = rowNumCol();
+  const trs = order.map((i, pos) => {
+    const r = g.rows[i];
+    const tds = disp.map(j => j === hiC ? `<td class="rown">${pos + 1}</td>` : j === "nick"
+      ? `<td class="cellw"><input class="gcell gnick" data-i="${i}" value="${esc(r.nick)}" size="${size(r.nick || (nameAt >= 0 ? r.cells[nameAt] : "") || "nickname")}" placeholder="${esc(nameAt >= 0 ? r.cells[nameAt] : "")}" spellcheck="false" autocomplete="off"
+        title="Names used on the patchbay labels, separated by commas"></td>`
+      : cell(r.cells[j], i, j));
+    return `<tr>${tds.join("")}<td><button class="del" data-del="${i}" title="Delete this row">×</button></td></tr>`;
+  }).join("");
+  body.innerHTML = `<div class="gscroll"><table><thead><tr>${ths}</tr></thead><tbody>${trs}</tbody></table></div>`;
+}
+
+/** Parse a CSV/TSV (or rows pasted from Sheets) into {cols, data} or an error string. */
+function parseGearTable(text) {
+  const rows = parseCSV(text).map(r => r.map(c => String(c).trim()));
+  const h = rows.findIndex(r => r.some(c => /^name$/i.test(c)));
+  if (h < 0) return "No “Name” column found. Include the header row (#, Name, Brand, Category…).";
+  let cols = rows[h];
+  const data = rows.slice(h + 1).filter(r => r.some(c => c));
+  let last = cols.length - 1;                                     // drop empty trailing columns
+  while (last > 0 && !cols[last] && data.every(r => !r[last])) last--;
+  cols = cols.slice(0, last + 1);
+  return { cols, data: data.map(r => cols.map((_, i) => r[i] || "")) };
+}
+
+function importGear(text, how) {
+  const parsed = parseGearTable(text);
+  if (typeof parsed === "string") return { error: parsed };
+  const g = gearData();
+  const keyOf = (cells, cols) => {
+    const ni = cols.findIndex(c => /^name$/i.test(c)), bi = cols.findIndex(c => /^brand$/i.test(c));
+    return `${ni >= 0 ? cells[ni] : ""}|${bi >= 0 ? cells[bi] : ""}`.trim().toLowerCase();
+  };
+  const incoming = parsed.data.map(cells => ({ cells, nick: "", url: "" }));
+  absorbUrlColumn(parsed.cols, incoming);
+  absorbNickColumn(parsed.cols, incoming);
+  if (how === "replace" || !g.rows.length) {
+    const old = new Map(g.rows.map(r => [keyOf(r.cells, g.cols), r]));
+    for (const r of incoming) {
+      const o = old.get(keyOf(r.cells, parsed.cols));
+      if (o) { if (!r.nick) r.nick = o.nick; if (!r.url) r.url = o.url || ""; }   // nicknames and manual links carry over
+    }
+    state.gear = { cols: parsed.cols, catColors: g.catColors || {}, rows: incoming };
+    renumberGear(); invalidateGear(); save(); renderGear(); applyLabelColors();
+    return { msg: `Replaced the list with ${parsed.data.length} items.` };
+  }
+  // add new only: match columns by name, add any new columns, append unknown gear
+  const colIndex = c => g.cols.findIndex(x => x.trim().toLowerCase() === c.trim().toLowerCase());
+  let newCols = 0;
+  for (const c of parsed.cols) if (c && colIndex(c) < 0) { g.cols.push(c); g.rows.forEach(r => r.cells.push("")); newCols++; }
+  const have = new Set(g.rows.map(r => keyOf(r.cells, g.cols)));
+  let added = 0;
+  for (const inc of incoming) {
+    const k = keyOf(inc.cells, parsed.cols);
+    if (have.has(k)) continue;
+    const row = g.cols.map(() => "");
+    parsed.cols.forEach((c, i) => { const j = colIndex(c); if (j >= 0) row[j] = inc.cells[i]; });
+    g.rows.push({ cells: row, nick: inc.nick, url: inc.url }); have.add(k); added++;
+  }
+  renumberGear(); invalidateGear(); save(); renderGear(); applyLabelColors();
+  return { msg: `Added ${added} new item${added === 1 ? "" : "s"}${newCols ? ` and ${newCols} new column${newCols === 1 ? "" : "s"}` : ""}. Existing gear was left as is.` };
+}
+
+/* Import dialog: choose replace / add-new each time, then a file or pasted rows */
+const gearHow = () => { const r = document.querySelector('input[name="gearHow"]:checked'); return r ? r.value : null; };
+function syncGearButtons() {
+  const ok = !!gearHow();
+  $("gearFileBtn").disabled = !ok;
+  $("gearPasteBtn").disabled = !ok || !$("gearPaste").value.trim();
+}
+document.querySelectorAll('input[name="gearHow"]').forEach(r => r.addEventListener("change", syncGearButtons));
+$("gearPaste").addEventListener("input", syncGearButtons);
+$("gearDone").addEventListener("click", () => $("gearDialog").close());
+function showGearResult(res) {
+  $("gearResult").innerHTML = res.error ? `<div class="err">${esc(res.error)}</div>` : `<div class="ok">${esc(res.msg)}</div>`;
+  if (!res.error) toast("Gear list updated");
+}
+$("gearFileBtn").addEventListener("click", () => $("gearFile").click());
+$("gearFile").addEventListener("change", async e => {
+  const f = e.target.files[0]; e.target.value = "";
+  if (!f || !gearHow()) return;
+  let res;
+  try { res = importGear(await f.text(), gearHow()); } catch (x) { res = { error: "Couldn’t read that file." }; }
+  showGearResult(res);
+});
+$("gearPasteBtn").addEventListener("click", () => {
+  const res = importGear($("gearPaste").value, gearHow());
+  showGearResult(res);
+  if (!res.error) $("gearPaste").value = "";
+  syncGearButtons();
+});
+
+$("gearWrap").addEventListener("click", e => {
+  const g = gearData();
+  const th = e.target.closest("th[data-sort]");
+  if (th) {
+    if (th.dataset.sort === "orig") { gearSort = { col: null, dir: 1 }; renderGearTable(); return; }
+    const col = +th.dataset.sort;
+    if (gearSort.col !== col) gearSort = { col, dir: 1 };
+    else if (gearSort.dir === 1) gearSort.dir = -1;
+    else gearSort = { col: null, dir: 1 };
+    renderGearTable(); return;
+  }
+  if (e.target.closest("#gearImport")) {
+    document.querySelectorAll('input[name="gearHow"]').forEach(r => r.checked = false);
+    $("gearResult").innerHTML = ""; syncGearButtons();
+    $("gearDialog").showModal(); return;
+  }
+  if (e.target.closest("#gearAdd")) {
+    if (!g.cols.length) g.cols = DEFAULT_GEAR_COLS.slice();
+    const row = { cells: g.cols.map(() => ""), nick: "", url: "" };
+    const hi = rowNumCol();
+    g.rows.push(row);
+    renumberGear();
+    save(); renderGearCats(); renderGearTable();
+    const i = g.rows.length - 1;
+    const first = gearDisplayOrder().find(j => j !== hi);           // left-most column on screen, after #
+    const el = first === "nick" ? document.querySelector(`#gearWrap .gnick[data-i="${i}"]`)
+      : document.querySelector(`#gearWrap .gcell[data-i="${i}"][data-j="${first}"]`);
+    if (el) { el.scrollIntoView({ block: "nearest" }); el.focus(); }
+    return;
+  }
+  const lnk = e.target.closest("[data-link]");
+  if (lnk) {
+    const r = g.rows[+lnk.dataset.link];
+    const v = prompt("Paste the link to this manual (leave empty to remove it):", r.url || "");
+    if (v === null) return;
+    r.url = v.trim(); save(); renderGearTable(); return;
+  }
+  const del = e.target.closest("[data-del]");
+  if (del) {
+    const i = +del.dataset.del, ni = gearCol(/^name$/i);
+    const name = (ni >= 0 && g.rows[i].cells[ni].trim()) || "this row";
+    if (!confirm(`Delete “${name}” from the gear list?`)) return;
+    g.rows.splice(i, 1);
+    renumberGear();
+    invalidateGear(); save(); renderGearCats(); renderGearTable(); applyLabelColors();
+    return;
+  }
+  if (e.target.closest("#gearExport")) {
+    const q = x => /[",\n]/.test(x) ? `"${x.replace(/"/g, '""')}"` : x;
+    const disp = gearDisplayOrder();
+    const lines = [disp.map(j => j === "nick" ? "Nickname(s)" : g.cols[j]).concat("Manual URL").map(q).join(",")]
+      .concat(g.rows.map(r => disp.map(j => j === "nick" ? r.nick : r.cells[j]).concat(r.url || "").map(q).join(",")));
+    const blob = new Blob(["﻿" + lines.join("\r\n") + "\r\n"], { type: "text/csv" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob); a.download = `Gear List ${todayISO()}.csv`;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+    toast("Gear CSV saved to Downloads");
+  }
+});
+$("gearWrap").addEventListener("keydown", e => {
+  const el = e.target;
+  if (!el.classList.contains("gcell")) return;
+  if (e.key === "Escape") {
+    if (el.selectionEnd === el.value.length && el.selectionStart < el.selectionEnd) {   // drop an unaccepted suggestion
+      el.value = el.dataset.typed != null && el.dataset.typed.length === el.selectionStart ? el.dataset.typed : el.value.slice(0, el.selectionStart);
+      el.dispatchEvent(new Event("input", { bubbles: true }));
+      return;
+    }
+    el.blur(); return;
+  }
+  if (e.key !== "Enter") return;
+  e.preventDefault();
+  const sel = el.classList.contains("gnick") ? ".gnick" : `.gcell[data-j="${el.dataset.j}"]`;
+  const cells = [...document.querySelectorAll(`#gearBody ${sel}`)];        // in on-screen (sorted) order
+  const next = cells[cells.indexOf(el) + (e.shiftKey ? -1 : 1)];
+  if (next) { next.focus(); next.select(); next.scrollIntoView({ block: "nearest" }); }
+  else el.blur();
+});
+$("gearWrap").addEventListener("input", e => {
+  const el = e.target, g = gearData();
+  if (el.classList.contains("gnick")) {
+    g.rows[+el.dataset.i].nick = el.value;
+    invalidateGear(); save(); applyLabelColors(); return;
+  }
+  if (!el.classList.contains("gcell")) return;
+  const j = +el.dataset.j;
+  // Type-ahead: while typing at the end of the cell, fill in the first matching value from this column
+  // and select the added part (keep typing to override it; Return/Tab accepts; Esc drops it).
+  if (e.inputType === "insertText" && el.selectionStart === el.value.length && el.value.trim() && j !== gearCol(/^#$/)) {
+    const typed = el.value, low = typed.toLowerCase(), self = +el.dataset.i;
+    const count = new Map();                                   // most-used values first, then A→Z
+    g.rows.forEach((r, k) => { const v = r.cells[j].trim(); if (v && k !== self) count.set(v, (count.get(v) || 0) + 1); });
+    const vals = [...count.keys()].sort((a, b) => count.get(b) - count.get(a) || a.localeCompare(b, undefined, { numeric: true, sensitivity: "base" }));
+    const hit = vals.find(v => v.toLowerCase().startsWith(low) && v.length > typed.length);
+    if (hit) { el.value = hit; el.setSelectionRange(typed.length, hit.length); el.dataset.typed = typed; }   // takes the existing spelling ("f" → "FX")
+  }
+  g.rows[+el.dataset.i].cells[j] = el.value;
+  el.title = el.value;
+  if (j === gearCol(/^category$/i)) el.setAttribute("style", chipVars(el.value));
+  if (j === gearCol(/^name$/i)) {
+    const nk = document.querySelector(`#gearWrap .gnick[data-i="${el.dataset.i}"]`);
+    if (nk) nk.placeholder = el.value;
+  }
+  if (j === gearCol(/^name$/i) || j === gearCol(/^category$/i)) { invalidateGear(); applyLabelColors(); }
+  save();
+});
+$("gearWrap").addEventListener("change", e => {
+  const el = e.target, g = gearData();
+  if (el.classList.contains("gcat")) {
+    if (el.value === "") delete g.catColors[el.dataset.cat]; else g.catColors[el.dataset.cat] = +el.value;
+    save(); renderGearCats(); applyLabelColors();
+    document.querySelectorAll("#gearWrap .gcell.cat").forEach(c => c.setAttribute("style", chipVars(c.value)));
+    return;
+  }
+  // after editing a cell: refresh category list and the ↗ links (only when nothing in the table has focus)
+  if (el.classList.contains("gcell")) setTimeout(() => {
+    renderGearCats();
+    const a = document.activeElement;
+    if (!a || !a.closest || !a.closest("#gearBody")) renderGearTable();
+  }, 0);
+});
+
+/* ---------- Backup / restore ---------- */
+function doBackup() {
+  saveNow();
+  const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
+  const a = document.createElement("a");
+  const d = new Date(), pad = n => String(n).padStart(2, "0");
+  a.href = URL.createObjectURL(blob);
+  a.download = `patchcache-backup-${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}.json`;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  toast("Backup file saved to Downloads");
+}
+$("importFile").addEventListener("change", async e => {
+  const f = e.target.files[0]; e.target.value = "";
+  if (!f) return;
+  let data = null;
+  try { data = normalize(JSON.parse(await f.text())); } catch (err) {}
+  if (!data) { alert("That file isn’t a PatchCache backup."); return; }
+  if (!confirm(`Replace everything here with “${f.name}”?\n(${data.patchbays.length} patchbays, ${data.labels.length} saved labels)`)) return;
+  state = data; saveNow(); renderAll(); toast("Backup restored");
+});
+
+/* ---------- Boot ---------- */
+function renderAll() { invalidateGear(); renderHeader(); renderBoard(); renderVersion(); renderGear(); }
+state = load();
+renderDatalist();
+// open on the whole-panel view, fitted to the window
+state.scale = Math.min(5.5, fitScale(CHANNELS)); setHalfView("all");
+renderAll();
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { if (!document.activeElement || !document.activeElement.classList.contains("lbl")) renderBoard(); });
+saveNow();
+</script>
+</body>
+</html>
